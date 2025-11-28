@@ -22,10 +22,12 @@ import com.event_management_system.dto.EventRequestDTO;
 import com.event_management_system.dto.EventResponseDTO;
 import com.event_management_system.service.EventService;
 
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 
 @RestController
@@ -36,29 +38,31 @@ public class EventController {
     private EventService eventService;
 
     @PostMapping
-    @ApiOperation(value = "Create a new event", notes = "Creates a new event with provided details. The start time must be before end time.")
+    @Operation(summary = "Create a new event", description = "Creates a new event with provided details. The start time must be before end time.")
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Event created successfully"),
-        @ApiResponse(code = 400, message = "Invalid input data or validation failed"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "201", description = "Event created successfully",
+                    content = @Content(schema = @Schema(implementation = EventResponseDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input data or validation failed"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<EventResponseDTO> createEvent(
-            @ApiParam(value = "Event details to be created", required = true)
+            @Parameter(description = "Event details to be created", required = true)
             @Valid @RequestBody EventRequestDTO eventRequestDTO) {
         EventResponseDTO savedEvent = eventService.createEvent(eventRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedEvent);
     }
 
     @GetMapping
-    @ApiOperation(value = "Get all events", notes = "Retrieves a paginated list of all events in system")
+    @Operation(summary = "Get all events", description = "Retrieves a paginated list of all events in system")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Events retrieved successfully"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Events retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = Page.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<Page<EventResponseDTO>> getAllEvents(
-            @ApiParam(value = "Page number (0-based)", example = "0") 
+            @Parameter(description = "Page number (0-based)", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @ApiParam(value = "Number of items per page", example = "10") 
+            @Parameter(description = "Number of items per page", example = "10")
             @RequestParam(defaultValue = "10") int size) {
         
         Pageable pageable = PageRequest.of(page, size);
@@ -67,14 +71,15 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Get event by ID", notes = "Retrieves a specific event by its unique identifier")
+    @Operation(summary = "Get event by ID", description = "Retrieves a specific event by its unique identifier")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Event found and retrieved successfully"),
-        @ApiResponse(code = 404, message = "Event not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Event found and retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = EventResponseDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Event not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<EventResponseDTO> getEventById(
-            @ApiParam(value = "Unique identifier of event", required = true, example = "1")
+            @Parameter(description = "Unique identifier of event", required = true, example = "1")
             @PathVariable Long id) {
         Optional<EventResponseDTO> event = eventService.getEventById(id);
         if (event.isPresent()) {
@@ -85,17 +90,18 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    @ApiOperation(value = "Update an existing event", notes = "Updates details of an existing event. The event must exist.")
+    @Operation(summary = "Update an existing event", description = "Updates details of an existing event. The event must exist.")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Event updated successfully"),
-        @ApiResponse(code = 400, message = "Invalid input data or validation failed"),
-        @ApiResponse(code = 404, message = "Event not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Event updated successfully",
+                    content = @Content(schema = @Schema(implementation = EventResponseDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input data or validation failed"),
+        @ApiResponse(responseCode = "404", description = "Event not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<EventResponseDTO> updateEvent(
-            @ApiParam(value = "Unique identifier of event to update", required = true, example = "1")
-            @PathVariable Long id, 
-            @ApiParam(value = "Updated event details", required = true)
+            @Parameter(description = "Unique identifier of event to update", required = true, example = "1")
+            @PathVariable Long id,
+            @Parameter(description = "Updated event details", required = true)
             @Valid @RequestBody EventRequestDTO eventDetails) {
         Optional<EventResponseDTO> eventOptional = eventService.updateEvent(id, eventDetails);
         if (eventOptional.isPresent()) {
@@ -106,14 +112,14 @@ public class EventController {
     }
 
     @DeleteMapping("/{id}")
-    @ApiOperation(value = "Delete an event", notes = "Soft-deletes an event by marking it as deleted. The event remains in the database but is marked as inactive.")
+    @Operation(summary = "Delete an event", description = "Soft-deletes an event by marking it as deleted. The event remains in the database but is marked as inactive.")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Event deleted successfully"),
-        @ApiResponse(code = 404, message = "Event not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Event deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Event not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<Void> deleteEvent(
-            @ApiParam(value = "Unique identifier of event to delete", required = true, example = "1")
+            @Parameter(description = "Unique identifier of event to delete", required = true, example = "1")
             @PathVariable Long id) {
         boolean deleted = eventService.deleteEvent(id);
         if (deleted) {

@@ -1,9 +1,19 @@
 package com.event_management_system.entity;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
+import com.event_management_system.enums.EventVisibility;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -38,5 +48,21 @@ public class Event extends BaseEntity {
     @NotBlank(message = "Location is required")
     @Column(name = "location", nullable = false, length = 200)
     private String location;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility", nullable = false, length = 20)
+    private EventVisibility visibility = EventVisibility.PUBLIC;
+
+    @ManyToOne
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private User organizer;
+
+    @ManyToMany
+    @JoinTable(
+        name = "event_attendees",
+        joinColumns = @JoinColumn(name = "event_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> attendees = new HashSet<>();
 
 }

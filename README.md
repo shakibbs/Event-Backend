@@ -29,7 +29,7 @@ A Spring Boot-based REST API for managing events, built with Java and following 
 - **Spring Boot 3.x**
 - **Spring Web**
 - **Spring Data JPA**
-- **H2 Database** (for development)
+- **MySQL Database** (for development and production)
 - **Swagger/OpenAPI 3**
 - **Maven**
 - **JUnit 5**
@@ -155,17 +155,19 @@ The project includes PowerShell scripts for API testing:
 
 ### Database Configuration
 
-The application uses H2 in-memory database by default. Database settings can be configured in `src/main/resources/application.properties`:
+The application uses MySQL database. Database settings can be configured in `src/main/resources/application.properties`:
 
 ```properties
-# H2 Database
-spring.datasource.url=jdbc:h2:mem:testdb
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=password
-spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-spring.h2.console.enabled=true
+# MySQL Database
+spring.datasource.url=jdbc:mysql://localhost:3306/event_management_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+spring.datasource.driverClassName=com.mysql.cj.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
 ```
+
+Note: Make sure to update the password field with your actual MySQL password.
 
 ### Server Configuration
 

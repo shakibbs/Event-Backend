@@ -112,7 +112,8 @@ public abstract class BaseEntity {
     }
 
        public static boolean isDateRangeValid(LocalDateTime start, LocalDateTime end) {
-    return start == null || end == null || end.isAfter(start);
+    // Both dates must be provided and end must be after start
+    return start != null && end != null && end.isAfter(start);
     }
 
     // ====== Convenience copy method ======

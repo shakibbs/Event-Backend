@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.event_management_system.enums.EventVisibility;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -30,6 +28,26 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Event extends BaseEntity {
 
+    /**
+     * Event Visibility Levels
+     * Controls who can view/access the event
+     */
+    public enum Visibility {
+        PUBLIC("Public"),
+        PRIVATE("Private"),
+        INVITE_ONLY("Invite Only");
+        
+        private final String displayName;
+        
+        Visibility(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
     @NotBlank(message = "Event title is required")
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -51,7 +69,7 @@ public class Event extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "visibility", nullable = false, length = 20)
-    private EventVisibility visibility = EventVisibility.PUBLIC;
+    private Visibility visibility = Visibility.PUBLIC;
 
     @ManyToOne
     @JoinColumn(name = "organizer_id", nullable = false)

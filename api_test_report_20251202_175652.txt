@@ -1,0 +1,86 @@
+﻿COMPREHENSIVE API TEST REPORT
+Generated: 2025-12-02 17:56:52
+
+TEST RESULTS SUMMARY:
+==================
+
+Total Tests Executed: 12
+Tests Passed: 0
+Tests Failed: 12
+Success Rate: 0%
+
+DETAILED RESULTS:
+================
+[FAIL] Create Event
+Method: POST
+Endpoint: /events
+Status Code: 0
+Timestamp: 2025-12-02 17:56:07
+Unexpected error: Unable to connect to the remote server
+[FAIL] Get All Events
+Method: GET
+Endpoint: /events
+Status Code: 0
+Timestamp: 2025-12-02 17:56:11
+Error: Unable to connect to the remote server
+[FAIL] Get Non-existent Event
+Method: GET
+Endpoint: /events/99999
+Status Code: 0
+Timestamp: 2025-12-02 17:56:15
+Unexpected error: Unable to connect to the remote server
+[FAIL] Create User
+Method: POST
+Endpoint: /users
+Status Code: 0
+Timestamp: 2025-12-02 17:56:19
+Error: Unable to connect to the remote server
+[FAIL] Get All Users
+Method: GET
+Endpoint: /users
+Status Code: 0
+Timestamp: 2025-12-02 17:56:23
+Error: Unable to connect to the remote server
+[FAIL] Get User by Email
+Method: GET
+Endpoint: /users/email/
+Status Code: 0
+Timestamp: 2025-12-02 17:56:27
+Error: Unable to connect to the remote server
+[FAIL] Get All Roles
+Method: GET
+Endpoint: /roles
+Status Code: 0
+Timestamp: 2025-12-02 17:56:31
+Error: Unable to connect to the remote server
+[FAIL] Create Role
+Method: POST
+Endpoint: /roles
+Status Code: 0
+Timestamp: 2025-12-02 17:56:35
+Error: Unable to connect to the remote server
+[FAIL] Get All Permissions
+Method: GET
+Endpoint: /permissions
+Status Code: 0
+Timestamp: 2025-12-02 17:56:40
+Error: Unable to connect to the remote server
+[FAIL] Create Permission
+Method: POST
+Endpoint: /permissions
+Status Code: 0
+Timestamp: 2025-12-02 17:56:44
+Error: Unable to connect to the remote server
+[FAIL] Swagger UI Access
+Method: GET
+Endpoint: /swagger-ui.html
+Status Code: 0
+Timestamp: 2025-12-02 17:56:48
+Error: Unable to connect to the remote server
+[FAIL] OpenAPI Docs Access
+Method: GET
+Endpoint: /api-docs
+Status Code: 0
+Timestamp: 2025-12-02 17:56:52
+Error: Unable to connect to the remote server
+

@@ -1,0 +1,108 @@
+﻿
+============================================================
+PHASE 1: SUPERADMIN LOGIN AND USER CREATION
+============================================================
+
+
+--------- Test 1.1: Superadmin Login (Valid)
+[FAIL] Superadmin login failed: The remote server returned an error: (401) Unauthorized.
+
+--------- Test 1.2: Superadmin Login (Invalid Password)
+[PASS] Invalid password correctly rejected (HTTP 401)
+
+--------- Test 1.3: Login (Non-existent Email)
+[PASS] Non-existent email correctly rejected (HTTP 401)
+
+============================================================
+PHASE 2: SKIPPED (No superadmin token)
+============================================================
+
+[SKIP] Cannot create users without superadmin authentication
+
+============================================================
+PHASE 3: TEST ADMIN USER AUTHENTICATION
+============================================================
+
+[SKIP] No ADMIN user created, skipping admin authentication tests
+
+============================================================
+PHASE 4: TEST ATTENDEE USER AUTHENTICATION
+============================================================
+
+[SKIP] No ATTENDEE user created, skipping attendee authentication tests
+
+============================================================
+PHASE 5: TEST RBAC - PROTECTED ENDPOINT ACCESS
+============================================================
+
+
+--------- Test 5.1: Superadmin Access to Protected Endpoint (GET /api/events)
+[SKIP] No superadmin token available
+
+--------- Test 5.2: Admin Access to Protected Endpoint (GET /api/events)
+[SKIP] No admin token available
+
+--------- Test 5.3: Attendee Access to Protected Endpoint (GET /api/events)
+[SKIP] No attendee token available
+
+--------- Test 5.4: Access Protected Endpoint Without Token
+[PASS] Protected endpoint correctly requires authentication (HTTP 401)
+
+--------- Test 5.5: Access Protected Endpoint With Invalid Token
+[PASS] Protected endpoint correctly rejected invalid token (HTTP 401)
+
+============================================================
+PHASE 6: TEST RBAC - USER MANAGEMENT PERMISSIONS
+============================================================
+
+
+--------- Test 6.1: Admin Can List Users (GET /api/users)
+[SKIP] No admin token available
+
+--------- Test 6.2: Attendee Can List Users (GET /api/users)
+[SKIP] No attendee token available
+
+============================================================
+PHASE 7: TEST TOKEN REFRESH AND LOGOUT
+============================================================
+
+
+--------- Test 7.1: Refresh Superadmin Token
+[SKIP] No refresh token available
+
+--------- Test 7.2: Refresh With Invalid Token
+[PASS] Invalid refresh token correctly rejected (HTTP 401)
+
+--------- Test 7.3: Logout
+[SKIP] No superadmin token available
+
+============================================================
+PHASE 8: TEST INVALID INPUT SCENARIOS
+============================================================
+
+
+--------- Test 8.1: Login Missing Email
+[PASS] Login correctly rejected for missing email (HTTP 400)
+
+--------- Test 8.2: Login With Invalid Email Format
+[PASS] Login correctly rejected for invalid email format (HTTP BadRequest)
+
+--------- Test 8.3: Login With Empty JSON
+[PASS] Login correctly rejected for empty body (HTTP 400)
+
+============================================================
+FINAL TEST SUMMARY
+============================================================
+
+
+====================================================================
+Test Results Summary
+====================================================================
+
+Total Tests:    19
+Passed:         8
+Failed:         1
+Skipped:        10
+Pass Rate:      42.11%
+
+STATUS: 1 TEST(S) FAILED [REVIEW REQUIRED]

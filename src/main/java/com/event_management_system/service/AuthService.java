@@ -1,0 +1,377 @@
+package com.event_management_system.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.event_management_system.dto.AuthResponseDTO;
+import com.event_management_system.dto.LoginRequestDTO;
+import com.event_management_system.entity.User;
+import com.event_management_system.mapper.UserMapper;
+import com.event_management_system.repository.UserRepository;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * AuthService: Handle authentication logic (login, refresh, logout)
+ * 
+ * IMPLEMENTS DIAGRAM 3: Login Flow
+ * 
+ * PURPOSE:
+ * Authenticate user with email & password
+ * Generate JWT tokens (access + refresh)
+ * Cache token UUIDs for server-side logout
+ * Return tokens and user info to client
+ * 
+ * FLOW from Diagram 3:
+ * 
+ * STEP 1: Email & Password Validation
+ * - Validate email and password are provided (not empty)
+ * - If validation fails → return error
+ * 
+ * STEP 2: Fetch User by Email
+ * - Query database: SELECT * FROM app_users WHERE email = ?
+ * - If not found → throw UsernameNotFoundException
+ * 
+ * STEP 3: Found? Check
+ * - If user exists → continue
+ * - If not found → return error (HTTP 401)
+ * 
+ * STEP 4: Compare Password
+ * - Compare incoming password with BCrypt hash in database
+ * - PasswordEncoder.matches(incomingPassword, storedHash)
+ * - If matches → continue
+ * - If not matches → return error (HTTP 401)
+ * 
+ * STEP 5: Matched? Check
+ * - If password correct → continue
+ * - If incorrect → return error (HTTP 401)
+ * 
+ * STEP 6: Create Token Access and Refresh Token
+ * - JwtService.generateAccessToken(userId)
+ * - JwtService.generateRefreshToken(userId)
+ * - Both tokens contain UUID for logout
+ * 
+ * STEP 7: Cache Tokens UUID
+ * - TokenCacheService.cacheAccessToken(uuid, userId, 45min)
+ * - TokenCacheService.cacheRefreshToken(uuid, userId, 7days)
+ * 
+ * STEP 8: Cache User
+ * - Optional: Can cache user details for faster access
+ * - For now, we fetch from database on each request
+ * 
+ * STEP 9: Return to User
+ * - Return AuthResponseDTO with:
+ *   - accessToken
+ *   - refreshToken
+ *   - tokenType: "Bearer"
+ *   - expiresIn: 2700 (seconds, 45 minutes)
+ *   - user: UserResponseDTO
+ * 
+ * SECURITY NOTES:
+ * 
+ * Password Encoding:
+ * - Never compare plain text passwords
+ * - Always use BCrypt or similar
+ * - BCrypt automatically salts the password
+ * - Same password produces different hashes (due to salt)
+ * - PasswordEncoder.matches() compares safely
+ * 
+ * Error Messages:
+ * - Always say "Invalid credentials" (don't reveal if email exists)
+ * - Prevents user enumeration attacks
+ * - Attacker can't determine valid emails
+ * 
+ * Token Generation:
+ * - Each token gets a unique UUID
+ * - Enables server-side logout
+ * - Tokens don't expire in app logic, only by timestamp
+ * 
+ * Caching:
+ * - Both tokens cached with their UUID as key
+ * - On every request, token UUID is looked up in cache
+ * - If not in cache → user logged out or token invalid
+ */
+@Slf4j
+@Service
+public class AuthService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private TokenCacheService tokenCacheService;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    /**
+     * Authenticate user with email and password
+     * 
+     * IMPLEMENTS DIAGRAM 3: Complete Login Flow
+     * 
+     * WHEN CALLED:
+     * - User clicks "Login" button
+     * - Client sends email & password to POST /api/auth/login
+     * - AuthController calls authService.authenticate(loginRequest)
+     * 
+     * PROCESS:
+     * 1. Validate input (email & password not empty)
+     * 2. Find user by email in database
+     * 3. Compare password with BCrypt hash
+     * 4. Generate access token with UUID
+     * 5. Generate refresh token with UUID
+     * 6. Cache both token UUIDs with expiration
+     * 7. Build and return AuthResponseDTO
+     * 
+     * @param loginRequest Contains email and password from client
+     * @return AuthResponseDTO with tokens and user info
+     * @throws RuntimeException if credentials invalid
+     */
+    public AuthResponseDTO authenticate(LoginRequestDTO loginRequest) {
+        log.info("Attempting authentication for email: {}", loginRequest.getEmail());
+
+        // STEP 1: Validate input (basic validation, @Valid does most of this)
+        if (loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
+            log.warn("Authentication attempt with null email or password");
+            throw new RuntimeException("Email and password are required");
+        }
+
+        // STEP 2: Fetch user by email (Diagram 3, Step 2)
+        log.debug("Searching for user with email: {}", loginRequest.getEmail());
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> {
+                    log.warn("User not found with email: {}", loginRequest.getEmail());
+                    // Don't reveal if email exists (security)
+                    return new RuntimeException("Invalid credentials");
+                });
+
+        log.debug("User found: {}", user.getId());
+
+        // STEP 3: Compare password (Diagram 3, Step 4)
+        // PasswordEncoder.matches(plainText, hash)
+        // - Hashes plainText with same salt as hash
+        // - Compares the two hashes
+        // - Returns true if match, false otherwise
+        log.debug("Validating password for user: {}", user.getId());
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            log.warn("Invalid password for user: {}", user.getId());
+            // Don't reveal if password is wrong (security)
+            throw new RuntimeException("Invalid credentials");
+        }
+
+        log.info("Password validated successfully for user: {}", user.getId());
+
+        // STEP 4: Generate access token (Diagram 3, Step 6)
+        // JwtService creates JWT with:
+        // - "sub": user ID
+        // - "tokenUuid": unique UUID for this token
+        // - "iat": issued at time
+        // - "exp": expiration time (45 minutes)
+        String accessToken = jwtService.generateAccessToken(user.getId());
+        log.debug("Access token generated for user: {}", user.getId());
+
+        // STEP 5: Generate refresh token (Diagram 3, Step 6)
+        // Same structure as access token but with 7-day expiration
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        log.debug("Refresh token generated for user: {}", user.getId());
+
+        // STEP 6: Extract UUIDs from tokens and cache them (Diagram 3, Step 7-9)
+        // Get UUIDs from JWT payloads
+        String accessTokenUuid = jwtService.getTokenUuidFromToken(accessToken);
+        String refreshTokenUuid = jwtService.getTokenUuidFromToken(refreshToken);
+
+        log.debug("Access Token UUID: {}, Refresh Token UUID: {}", accessTokenUuid, refreshTokenUuid);
+
+        // STEP 7: Cache tokens with their UUIDs
+        // This allows:
+        // - Logout: Delete UUID from cache, token becomes invalid
+        // - Verification: Check if UUID exists in cache on each request
+        tokenCacheService.cacheAccessToken(accessTokenUuid, user.getId());
+        tokenCacheService.cacheRefreshToken(refreshTokenUuid, user.getId());
+
+        log.info("Tokens cached for user: {}", user.getId());
+
+        // STEP 8: Build response DTO
+        // Convert user entity to DTO for response
+        var userResponseDTO = userMapper.toUserResponseDTO(user);
+
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO();
+        authResponseDTO.setAccessToken(accessToken);
+        authResponseDTO.setRefreshToken(refreshToken);
+        authResponseDTO.setTokenType("Bearer");
+        authResponseDTO.setExpiresIn(45 * 60L);  // 45 minutes in seconds
+        authResponseDTO.setUser(userResponseDTO);
+
+        log.info("Authentication successful for user: {} (email: {})", user.getId(), user.getEmail());
+
+        return authResponseDTO;
+    }
+
+    /**
+     * Refresh access token using refresh token
+     * 
+     * WHEN CALLED:
+     * - Access token expires (45 minutes)
+     * - Client sends refresh token to POST /api/auth/refresh
+     * - AuthController calls authService.refreshAccessToken(refreshToken)
+     * 
+     * PROCESS:
+     * 1. Validate refresh token (signature & expiration)
+     * 2. Extract user ID from refresh token
+     * 3. Generate new access token
+     * 4. Cache new access token UUID
+     * 5. Return new access token
+     * 
+     * WHY refresh token?
+     * - Access token is short-lived (45 min)
+     * - User doesn't have to re-login when it expires
+     * - Use refresh token to get new access token
+     * - If refresh token compromised, user must login again (7 days later)
+     * 
+     * @param refreshToken Refresh token from client
+     * @return AuthResponseDTO with new access token
+     * @throws RuntimeException if refresh token invalid/expired
+     */
+    public AuthResponseDTO refreshAccessToken(String refreshToken) {
+        log.info("Attempting to refresh access token");
+
+        // STEP 1: Validate refresh token
+        if (!jwtService.validateToken(refreshToken)) {
+            log.warn("Refresh token is invalid or expired");
+            throw new RuntimeException("Refresh token is invalid or expired");
+        }
+
+        log.debug("Refresh token validated successfully");
+
+        // STEP 2: Extract user ID and token UUID from refresh token
+        Long userId = jwtService.getUserIdFromToken(refreshToken);
+        String refreshTokenUuid = jwtService.getTokenUuidFromToken(refreshToken);
+
+        log.debug("Extracted user ID: {} and token UUID: {} from refresh token", userId, refreshTokenUuid);
+
+        // STEP 3: Verify refresh token is in cache (not logged out)
+        Long cachedUserId = tokenCacheService.getUserIdFromCache(refreshTokenUuid);
+        if (cachedUserId == null) {
+            log.warn("Refresh token not found in cache (user may have logged out)");
+            throw new RuntimeException("Refresh token is invalid or expired");
+        }
+
+        if (!userId.equals(cachedUserId)) {
+            log.error("User ID mismatch in refresh token");
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+        log.debug("Refresh token verified in cache");
+
+        // STEP 4: Generate new access token
+        String newAccessToken = jwtService.generateAccessToken(userId);
+        log.debug("New access token generated for user: {}", userId);
+
+        // STEP 5: Extract UUID and cache it
+        String newAccessTokenUuid = jwtService.getTokenUuidFromToken(newAccessToken);
+        tokenCacheService.cacheAccessToken(newAccessTokenUuid, userId);
+
+        log.info("New access token cached for user: {}", userId);
+
+        // STEP 6: Build response
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        var userResponseDTO = userMapper.toUserResponseDTO(user);
+
+        AuthResponseDTO authResponseDTO = new AuthResponseDTO();
+        authResponseDTO.setAccessToken(newAccessToken);
+        authResponseDTO.setRefreshToken(refreshToken);  // Send back same refresh token
+        authResponseDTO.setTokenType("Bearer");
+        authResponseDTO.setExpiresIn(45 * 60L);  // 45 minutes in seconds
+        authResponseDTO.setUser(userResponseDTO);
+
+        log.info("Access token refreshed successfully for user: {}", userId);
+
+        return authResponseDTO;
+    }
+
+    /**
+     * Logout user by invalidating tokens
+     * 
+     * WHEN CALLED:
+     * - User clicks "Logout" button
+     * - Client sends token to POST /api/auth/logout
+     * - AuthController calls authService.logout(token)
+     * 
+     * PROCESS:
+     * 1. Validate token (signature & expiration)
+     * 2. Extract token UUID from token
+     * 3. Delete UUID from cache
+     * 4. Even if client uses same token later, UUID not in cache → 401
+     * 
+     * WHY this works:
+     * - Token itself is still valid (signature & expiration OK)
+     * - But UUID not in cache means token is "logged out"
+     * - On next request, JwtAuthenticationFilter checks cache
+     * - Cache returns null → User not authenticated
+     * - Request gets 401
+     * 
+     * SECURITY:
+     * - Token can't be used after logout
+     * - UUID cache provides server-side logout
+     * - Doesn't require database changes
+     * - Works across multiple servers (when using Redis)
+     * 
+     * @param token Access token to logout
+     * @throws RuntimeException if token invalid
+     */
+    public void logout(String token) {
+        log.info("Attempting logout");
+
+        // STEP 1: Validate token
+        if (!jwtService.validateToken(token)) {
+            log.warn("Token is invalid or expired, cannot logout");
+            throw new RuntimeException("Invalid token");
+        }
+
+        // STEP 2: Extract token UUID
+        String tokenUuid = jwtService.getTokenUuidFromToken(token);
+        log.debug("Extracted token UUID: {}", tokenUuid);
+
+        // STEP 3: Remove from cache (invalidate token)
+        tokenCacheService.removeTokenFromCache(tokenUuid);
+
+        log.info("User logged out successfully, token UUID removed from cache");
+    }
+
+    /**
+     * Helper method: Check if user exists by email
+     * 
+     * WHEN CALLED:
+     * - During registration validation
+     * - To prevent duplicate emails
+     * 
+     * @param email Email to check
+     * @return true if user exists, false otherwise
+     */
+    public boolean userExistsByEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
+    /**
+     * Helper method: Get active token count (for monitoring)
+     * 
+     * WHEN CALLED:
+     * - Admin dashboard
+     * - Monitoring system
+     * - Debugging
+     * 
+     * @return Number of active tokens in cache
+     */
+    public int getActiveTokenCount() {
+        return tokenCacheService.getTokenCacheSize();
+    }
+}

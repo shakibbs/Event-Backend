@@ -1,0 +1,86 @@
+﻿COMPREHENSIVE API TEST REPORT
+Generated: 2025-12-02 17:42:13
+
+TEST RESULTS SUMMARY:
+==================
+
+Total Tests Executed: 12
+Tests Passed: 8
+Tests Failed: 4
+Success Rate: 66.67%
+
+DETAILED RESULTS:
+================
+[PASS] Create Event
+Method: POST
+Endpoint: /events
+Status Code: 403
+Timestamp: 2025-12-02 17:42:12
+Correctly blocked due to insufficient permissions
+[PASS] Get All Events
+Method: GET
+Endpoint: /events
+Status Code: 200
+Timestamp: 2025-12-02 17:42:12
+Successfully retrieved paginated events
+[PASS] Get Non-existent Event
+Method: GET
+Endpoint: /events/99999
+Status Code: 404
+Timestamp: 2025-12-02 17:42:12
+Correctly returned 404 for non-existent event
+[FAIL] Create User
+Method: POST
+Endpoint: /users
+Status Code: 500
+Timestamp: 2025-12-02 17:42:12
+Error: The remote server returned an error: (500) Internal Server Error.
+[PASS] Get All Users
+Method: GET
+Endpoint: /users
+Status Code: 200
+Timestamp: 2025-12-02 17:42:12
+Successfully retrieved all users
+[FAIL] Get User by Email
+Method: GET
+Endpoint: /users/email/testuser@example.com
+Status Code: 404
+Timestamp: 2025-12-02 17:42:12
+Error: The remote server returned an error: (404) Not Found.
+[PASS] Get All Roles
+Method: GET
+Endpoint: /roles
+Status Code: 200
+Timestamp: 2025-12-02 17:42:12
+Successfully retrieved all roles
+[FAIL] Create Role
+Method: POST
+Endpoint: /roles
+Status Code: 409
+Timestamp: 2025-12-02 17:42:12
+Error: The remote server returned an error: (409) Conflict.
+[PASS] Get All Permissions
+Method: GET
+Endpoint: /permissions
+Status Code: 200
+Timestamp: 2025-12-02 17:42:12
+Successfully retrieved all permissions
+[FAIL] Create Permission
+Method: POST
+Endpoint: /permissions
+Status Code: 409
+Timestamp: 2025-12-02 17:42:12
+Error: The remote server returned an error: (409) Conflict.
+[PASS] Swagger UI Access
+Method: GET
+Endpoint: /swagger-ui.html
+Status Code: 200
+Timestamp: 2025-12-02 17:42:12
+Swagger UI is accessible
+[PASS] OpenAPI Docs Access
+Method: GET
+Endpoint: /api-docs
+Status Code: 200
+Timestamp: 2025-12-02 17:42:13
+OpenAPI documentation is accessible
+

@@ -1,0 +1,86 @@
+﻿COMPREHENSIVE API TEST REPORT
+Generated: 2025-12-02 17:58:28
+
+TEST RESULTS SUMMARY:
+==================
+
+Total Tests Executed: 12
+Tests Passed: 12
+Tests Failed: 0
+Success Rate: 100%
+
+DETAILED RESULTS:
+================
+[PASS] Create Event
+Method: POST
+Endpoint: /events
+Status Code: 403
+Timestamp: 2025-12-02 17:58:28
+Correctly blocked due to insufficient permissions
+[PASS] Get All Events
+Method: GET
+Endpoint: /events
+Status Code: 200
+Timestamp: 2025-12-02 17:58:28
+Successfully retrieved paginated events
+[PASS] Get Non-existent Event
+Method: GET
+Endpoint: /events/99999
+Status Code: 404
+Timestamp: 2025-12-02 17:58:28
+Correctly returned 404 for non-existent event
+[PASS] Create User
+Method: POST
+Endpoint: /users
+Status Code: 201
+Timestamp: 2025-12-02 17:58:28
+User created successfully
+[PASS] Get All Users
+Method: GET
+Endpoint: /users
+Status Code: 200
+Timestamp: 2025-12-02 17:58:28
+Successfully retrieved all users
+[PASS] Get User by Email
+Method: GET
+Endpoint: /users/email/superadmin@ems.com
+Status Code: 200
+Timestamp: 2025-12-02 17:58:28
+Successfully retrieved user by email
+[PASS] Get All Roles
+Method: GET
+Endpoint: /roles
+Status Code: 200
+Timestamp: 2025-12-02 17:58:28
+Successfully retrieved all roles
+[PASS] Create Role
+Method: POST
+Endpoint: /roles
+Status Code: 201
+Timestamp: 2025-12-02 17:58:28
+Role created successfully
+[PASS] Get All Permissions
+Method: GET
+Endpoint: /permissions
+Status Code: 200
+Timestamp: 2025-12-02 17:58:28
+Successfully retrieved all permissions
+[PASS] Create Permission
+Method: POST
+Endpoint: /permissions
+Status Code: 201
+Timestamp: 2025-12-02 17:58:28
+Permission created successfully
+[PASS] Swagger UI Access
+Method: GET
+Endpoint: /swagger-ui.html
+Status Code: 200
+Timestamp: 2025-12-02 17:58:28
+Swagger UI is accessible
+[PASS] OpenAPI Docs Access
+Method: GET
+Endpoint: /api-docs
+Status Code: 200
+Timestamp: 2025-12-02 17:58:28
+OpenAPI documentation is accessible
+

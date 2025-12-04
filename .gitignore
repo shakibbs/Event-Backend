@@ -1,18 +1,12 @@
-# Ignore everything first
-*
-
-# But track these specific files and directories
-!src/
-!pom.xml
-!README.md
-!SECURITY_REPORT.md
-!.gitignore
-
-# Standard Java/Maven exclusions (for files inside src that should be ignored)
+# Ignore IDE and build directories
+.idea/
+.vscode/
+.mvn/
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+build/
+*.iml
+*.iws
+*.ipr
 
 ### STS ###
 .apt_generated
@@ -23,28 +17,24 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
-.vscode/
+# OS files
+.DS_Store
+Thumbs.db
+.gitattributes
 
-# Additional files to ignore
-HELP.md
-*.json
-*.ps1
+# Maven wrapper (optional)
 mvnw
 mvnw.cmd
+
+# Ignore large or temporary test reports (optional)
+# Uncomment if you want to exclude these:
+# comprehensive_rbac_test_report_*.txt
+# api_test_report_*.txt
+# rbac_test_report_*.txt

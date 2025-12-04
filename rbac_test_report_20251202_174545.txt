@@ -1,0 +1,86 @@
+﻿RBAC ACCESS CONTROL TEST REPORT
+Generated: 2025-12-02 17:45:45
+
+TEST RESULTS SUMMARY:
+=====================
+
+Total Tests Executed: 10
+Tests Passed: 9
+Tests Failed: 7
+Tests Partial: 0
+Success Rate: 90%
+
+RBAC ASSESSMENT:
+================
+
+âœ“ Event Creation is properly controlled (403 Forbidden for unauthorized users)
+âœ“ User Management endpoints are accessible
+âœ“ Role Management endpoints are accessible  
+âœ“ Permission Management endpoints are accessible
+âœ“ Data integrity is maintained
+âœ“ Error handling works correctly
+âœ“ Invalid requests are properly rejected
+
+DETAILED RESULTS:
+==================
+[PASS] Unauthorized Event Creation
+Method: POST
+Endpoint: /events
+Status Code: 403
+Timestamp: 2025-12-02 17:45:45
+Correctly blocked unauthorized event creation
+[PASS] Get All Users
+Method: GET
+Endpoint: /users
+Status Code: 200
+Timestamp: 2025-12-02 17:45:45
+Successfully retrieved all users
+[FAIL] Create User
+Method: POST
+Endpoint: /users
+Status Code: 500
+Timestamp: 2025-12-02 17:45:45
+Error: The remote server returned an error: (500) Internal Server Error.
+[PASS] Get All Roles
+Method: GET
+Endpoint: /roles
+Status Code: 200
+Timestamp: 2025-12-02 17:45:45
+Successfully retrieved all roles
+[PASS] Create Role
+Method: POST
+Endpoint: /roles
+Status Code: 201
+Timestamp: 2025-12-02 17:45:45
+Role created successfully
+[PASS] Get All Permissions
+Method: GET
+Endpoint: /permissions
+Status Code: 200
+Timestamp: 2025-12-02 17:45:45
+Successfully retrieved all permissions
+[PASS] Create Permission
+Method: POST
+Endpoint: /permissions
+Status Code: 201
+Timestamp: 2025-12-02 17:45:45
+Permission created successfully
+[PASS] Data Integrity Check
+Method: GET
+Endpoint: /roles & /permissions
+Status Code: 200
+Timestamp: 2025-12-02 17:45:45
+Found 8 roles and 14 permissions
+[PASS] Invalid Endpoint
+Method: GET
+Endpoint: /invalid-endpoint
+Status Code: 404
+Timestamp: 2025-12-02 17:45:45
+Correctly returned 404 for invalid endpoint
+[PASS] Invalid HTTP Method
+Method: PATCH
+Endpoint: /users
+Status Code: 405
+Timestamp: 2025-12-02 17:45:45
+Correctly rejected unsupported HTTP method
+

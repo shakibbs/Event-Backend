@@ -1,0 +1,7 @@
+{
+  "title": "Invalid Range Event Test",
+  "description": "Testing validation for invalid date range",
+  "startTime": "2025-12-15T17:00:00",
+  "endTime": "2025-12-15T09:00:00",
+  "location": "Test Location"
+}

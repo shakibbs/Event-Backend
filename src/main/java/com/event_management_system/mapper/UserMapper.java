@@ -1,0 +1,122 @@
+package com.event_management_system.mapper;
+
+import org.springframework.stereotype.Component;
+
+import com.event_management_system.dto.RoleResponseDTO;
+import com.event_management_system.dto.UserRequestDTO;
+import com.event_management_system.dto.UserResponseDTO;
+import com.event_management_system.entity.Role;
+import com.event_management_system.entity.User;
+
+@Component
+public class UserMapper {
+
+    public User toEntity(UserRequestDTO userRequestDTO) {
+        if (userRequestDTO == null) {
+            return null;
+        }
+
+        User user = new User();
+        user.setFullName(userRequestDTO.getFullName());
+        user.setEmail(userRequestDTO.getEmail());
+        user.setPassword(userRequestDTO.getPassword());
+        
+        // Handle role assignment if roleId is provided
+        if (userRequestDTO.getRoleId() != null) {
+            Role role = new Role();
+            role.setId(userRequestDTO.getRoleId());
+            user.setRole(role);
+        }
+        
+        return user;
+    }
+
+    public UserResponseDTO toDto(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        userResponseDTO.setId(user.getId());
+        userResponseDTO.setFullName(user.getFullName());
+        userResponseDTO.setEmail(user.getEmail());
+        
+        // Convert single role to DTO
+        if (user.getRole() != null) {
+            RoleResponseDTO roleDTO = new RoleResponseDTO();
+            roleDTO.setId(user.getRole().getId());
+            roleDTO.setName(user.getRole().getName());
+            roleDTO.setStatus(user.getRole().getStatus());
+            roleDTO.setCreatedAt(user.getRole().getCreatedAt());
+            roleDTO.setCreatedBy(user.getRole().getCreatedBy());
+            roleDTO.setUpdatedAt(user.getRole().getUpdatedAt());
+            roleDTO.setUpdatedBy(user.getRole().getUpdatedBy());
+            userResponseDTO.setRole(roleDTO);
+        }
+        
+        userResponseDTO.setStatus(user.getStatus());
+        userResponseDTO.setCreatedAt(user.getCreatedAt());
+        userResponseDTO.setCreatedBy(user.getCreatedBy());
+        userResponseDTO.setUpdatedAt(user.getUpdatedAt());
+        userResponseDTO.setUpdatedBy(user.getUpdatedBy());
+
+        return userResponseDTO;
+    }
+
+    public void updateEntity(UserRequestDTO userRequestDTO, User existingUser) {
+        if (userRequestDTO == null || existingUser == null) {
+            return;
+        }
+
+        existingUser.setFullName(userRequestDTO.getFullName());
+        existingUser.setEmail(userRequestDTO.getEmail());
+        existingUser.setPassword(userRequestDTO.getPassword());
+        
+        // Handle role updates if roleId is provided
+        if (userRequestDTO.getRoleId() != null) {
+            Role role = new Role();
+            role.setId(userRequestDTO.getRoleId());
+            existingUser.setRole(role);
+        }
+    }
+
+    public UserResponseDTO toDtoWithRoles(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        UserResponseDTO userResponseDTO = new UserResponseDTO();
+        userResponseDTO.setId(user.getId());
+        userResponseDTO.setFullName(user.getFullName());
+        userResponseDTO.setEmail(user.getEmail());
+        
+        // Convert single role to DTO
+        if (user.getRole() != null) {
+            RoleResponseDTO roleDTO = new RoleResponseDTO();
+            roleDTO.setId(user.getRole().getId());
+            roleDTO.setName(user.getRole().getName());
+            roleDTO.setStatus(user.getRole().getStatus());
+            roleDTO.setCreatedAt(user.getRole().getCreatedAt());
+            roleDTO.setCreatedBy(user.getRole().getCreatedBy());
+            roleDTO.setUpdatedAt(user.getRole().getUpdatedAt());
+            roleDTO.setUpdatedBy(user.getRole().getUpdatedBy());
+            userResponseDTO.setRole(roleDTO);
+        }
+        
+        userResponseDTO.setStatus(user.getStatus());
+        userResponseDTO.setCreatedAt(user.getCreatedAt());
+        userResponseDTO.setCreatedBy(user.getCreatedBy());
+        userResponseDTO.setUpdatedAt(user.getUpdatedAt());
+        userResponseDTO.setUpdatedBy(user.getUpdatedBy());
+
+        return userResponseDTO;
+    }
+
+    /**
+     * Alias method for toDto - used by AuthService
+     * Maintains consistency with other mappers
+     */
+    public UserResponseDTO toUserResponseDTO(User user) {
+        return toDto(user);
+    }
+}

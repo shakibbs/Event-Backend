@@ -15,10 +15,6 @@ import com.event_management_system.service.RoleService;
 import com.event_management_system.service.UserService;
 import com.event_management_system.entity.Event;
 import com.event_management_system.entity.Permission;
-import com.event_management_system.entity.Role;
-import com.event_management_system.entity.RolePermission;
-import com.event_management_system.entity.User;
-import com.event_management_system.enums.EventVisibility;
 import com.event_management_system.repository.EventRepository;
 import com.event_management_system.repository.PermissionRepository;
 import com.event_management_system.repository.RolePermissionRepository;
@@ -108,7 +104,7 @@ public class RBACTest {
         superAdminEvent.setStartTime(LocalDateTime.now().plusDays(1));
         superAdminEvent.setEndTime(LocalDateTime.now().plusDays(1).plusHours(2));
         superAdminEvent.setLocation("SuperAdmin Location");
-        superAdminEvent.setVisibility(EventVisibility.PUBLIC);
+        superAdminEvent.setVisibility(Event.Visibility.PUBLIC);
         superAdminEvent.setOrganizer(superAdmin);
         superAdminEvent.recordCreation("test");
         superAdminEvent = eventRepository.save(superAdminEvent);
@@ -119,7 +115,7 @@ public class RBACTest {
         adminEvent.setStartTime(LocalDateTime.now().plusDays(2));
         adminEvent.setEndTime(LocalDateTime.now().plusDays(2).plusHours(2));
         adminEvent.setLocation("Admin Location");
-        adminEvent.setVisibility(EventVisibility.PUBLIC);
+        adminEvent.setVisibility(Event.Visibility.PUBLIC);
         adminEvent.setOrganizer(admin);
         adminEvent.recordCreation("test");
         adminEvent = eventRepository.save(adminEvent);
@@ -130,7 +126,7 @@ public class RBACTest {
         publicEvent.setStartTime(LocalDateTime.now().plusDays(3));
         publicEvent.setEndTime(LocalDateTime.now().plusDays(3).plusHours(2));
         publicEvent.setLocation("Public Location");
-        publicEvent.setVisibility(EventVisibility.PUBLIC);
+        publicEvent.setVisibility(Event.Visibility.PUBLIC);
         publicEvent.setOrganizer(attendee);
         publicEvent.recordCreation("test");
         publicEvent = eventRepository.save(publicEvent);

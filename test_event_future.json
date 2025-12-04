@@ -1,7 +1,0 @@
-{
-  "title": "Future Event Test",
-  "description": "Testing validation for future dates",
-  "startTime": "2025-12-15T09:00:00",
-  "endTime": "2025-12-15T17:00:00",
-  "location": "Test Location"
-}

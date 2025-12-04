@@ -1,7 +1,0 @@
-{
-  "title": "Past Event Test",
-  "description": "Testing validation for past dates",
-  "startTime": "2023-12-15T09:00:00",
-  "endTime": "2023-12-15T17:00:00",
-  "location": "Test Location"
-}

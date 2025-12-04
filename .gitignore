@@ -5,6 +5,7 @@
 !src/
 !pom.xml
 !README.md
+!SECURITY_REPORT.md
 !.gitignore
 
 # Standard Java/Maven exclusions (for files inside src that should be ignored)

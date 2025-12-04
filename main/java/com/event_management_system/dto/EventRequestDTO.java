@@ -26,4 +26,14 @@ public class EventRequestDTO {
 
     @NotBlank(message = "Location is required")
     private String location;
+    
+    public boolean isDateRangeValid() {
+        return startTime != null && endTime != null && endTime.isAfter(startTime);
+    }
+    
+    public boolean areDatesInFuture() {
+        LocalDateTime now = LocalDateTime.now();
+        return startTime != null && endTime != null &&
+               startTime.isAfter(now) && endTime.isAfter(now);
+    }
 }

@@ -1,9 +1,10 @@
 package com.event_management_system.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.event_management_system.dto.EventRequestDTO;
 import com.event_management_system.dto.EventResponseDTO;
 import com.event_management_system.entity.Event;
-import org.springframework.stereotype.Component;
 
 @Component
 public class EventMapper {
@@ -19,6 +20,7 @@ public class EventMapper {
         event.setStartTime(dto.getStartTime());
         event.setEndTime(dto.getEndTime());
         event.setLocation(dto.getLocation());
+        // Note: EventRequestDTO doesn't have visibility field, using default from entity
         
         return event;
     }
@@ -41,6 +43,7 @@ public class EventMapper {
         dto.setUpdatedBy(entity.getUpdatedBy());
         dto.setStatus(entity.getStatus());
         dto.setDeleted(entity.getDeleted());
+        // Note: EventResponseDTO doesn't have visibility field
         
         return dto;
     }
@@ -55,5 +58,6 @@ public class EventMapper {
         entity.setStartTime(dto.getStartTime());
         entity.setEndTime(dto.getEndTime());
         entity.setLocation(dto.getLocation());
+        // Note: EventRequestDTO doesn't have visibility field, not updating
     }
 }

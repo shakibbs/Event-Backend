@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,10 +29,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/events")
+@Tag(name = "Event Management", description = "APIs for managing events in the system")
 public class EventController {
 
     @Autowired
@@ -47,8 +50,9 @@ public class EventController {
     })
     public ResponseEntity<EventResponseDTO> createEvent(
             @Parameter(description = "Event details to be created", required = true)
-            @Valid @RequestBody EventRequestDTO eventRequestDTO) {
-        EventResponseDTO savedEvent = eventService.createEvent(eventRequestDTO);
+            @Valid @RequestBody @NonNull EventRequestDTO eventRequestDTO) {
+        
+        EventResponseDTO savedEvent = eventService.createEvent(eventRequestDTO, 1L); // Using default user ID
         return ResponseEntity.status(HttpStatus.CREATED).body(savedEvent);
     }
 
@@ -65,6 +69,14 @@ public class EventController {
             @Parameter(description = "Number of items per page", example = "10")
             @RequestParam(defaultValue = "10") int size) {
         
+        // Validate pagination parameters
+        if (page < 0) {
+            throw new IllegalArgumentException("Page number must be 0 or greater");
+        }
+        if (size < 1 || size > 100) {
+            throw new IllegalArgumentException("Page size must be between 1 and 100");
+        }
+        
         Pageable pageable = PageRequest.of(page, size);
         Page<EventResponseDTO> events = eventService.getAllEvents(pageable);
         return ResponseEntity.ok(events);
@@ -80,8 +92,9 @@ public class EventController {
     })
     public ResponseEntity<EventResponseDTO> getEventById(
             @Parameter(description = "Unique identifier of event", required = true, example = "1")
-            @PathVariable Long id) {
-        Optional<EventResponseDTO> event = eventService.getEventById(id);
+            @PathVariable @NonNull Long id) {
+        
+        Optional<EventResponseDTO> event = eventService.getEventById(id, 1L); // Using default user ID
         if (event.isPresent()) {
             return ResponseEntity.ok(event.get());
         } else {
@@ -100,10 +113,11 @@ public class EventController {
     })
     public ResponseEntity<EventResponseDTO> updateEvent(
             @Parameter(description = "Unique identifier of event to update", required = true, example = "1")
-            @PathVariable Long id,
+            @PathVariable @NonNull Long id,
             @Parameter(description = "Updated event details", required = true)
-            @Valid @RequestBody EventRequestDTO eventDetails) {
-        Optional<EventResponseDTO> eventOptional = eventService.updateEvent(id, eventDetails);
+            @Valid @RequestBody @NonNull EventRequestDTO eventDetails) {
+        
+        Optional<EventResponseDTO> eventOptional = eventService.updateEvent(id, eventDetails, 1L); // Using default user ID
         if (eventOptional.isPresent()) {
             return ResponseEntity.ok(eventOptional.get());
         } else {
@@ -120,12 +134,17 @@ public class EventController {
     })
     public ResponseEntity<Void> deleteEvent(
             @Parameter(description = "Unique identifier of event to delete", required = true, example = "1")
-            @PathVariable Long id) {
-        boolean deleted = eventService.deleteEvent(id);
-        if (deleted) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            @PathVariable @NonNull Long id) {
+        
+        try {
+            boolean deleted = eventService.deleteEvent(id, 1L); // Using default user ID
+            if (deleted) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 }

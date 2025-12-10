@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -111,7 +113,7 @@ import lombok.extern.slf4j.Slf4j;
  * - Consistent with security best practices
  * - Public endpoints don't require authentication
  */
-@SuppressWarnings("PMD.AvoidCatchingGenericException")
+@Component
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -139,7 +141,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * @param filterChain Chain of filters to continue to
      */
     @Override
-    @SuppressWarnings("all")
     protected void doFilterInternal(
             @org.springframework.lang.NonNull HttpServletRequest request,
             @org.springframework.lang.NonNull HttpServletResponse response,
@@ -221,12 +222,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.info("Request authenticated for user: {} with {} authorities", 
                      userDetails.getUsername(), userDetails.getAuthorities().size());
 
-        } catch (JwtException | IllegalArgumentException | NullPointerException e) {
+        } catch (JwtException | IllegalArgumentException | NullPointerException | UsernameNotFoundException | IOException | ServletException e) {
+            if (e instanceof IOException || e instanceof ServletException) {
+                log.error("IO or Servlet error in JWT filter: {}", e.getMessage());
+                throw (IOException) e;
+            }
             log.error("JWT processing error: {}", e.getMessage());
             // Continue without authentication
-        } catch (Exception e) {
-            log.error("Unexpected error in JWT authentication filter", e);
-            // Continue without authentication (don't break the filter chain)
         }
 
         // Continue to next filter or controller

@@ -35,6 +35,9 @@ public class UserService {
     
     @Autowired
     private EventRepository eventRepository;
+    
+    @Autowired
+    private UserPasswordHistoryService passwordHistoryService;
 
     @Transactional
     public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
@@ -44,14 +47,32 @@ public class UserService {
         // Validate that the role exists before assigning
         if (user.getRole() != null && user.getRole().getId() != null) {
             Long roleId = user.getRole().getId();
-            @SuppressWarnings("null")
-            boolean roleExists = roleRepository.existsById(roleId);
-            if (!roleExists) {
-                throw new RuntimeException("Role with ID " + roleId + " does not exist");
+            if (roleId != null) {
+                boolean roleExists = roleRepository.existsById(roleId);
+                if (!roleExists) {
+                    throw new RuntimeException("Role with ID " + roleId + " does not exist");
+                }
             }
         }
         
         User savedUser = userRepository.save(user);
+        
+        // Record password creation in history (for new user, no old password)
+        try {
+            String password = savedUser.getPassword();
+            if (password != null) {
+                passwordHistoryService.recordPasswordChange(
+                    savedUser,          // User whose password was set
+                    savedUser,          // Created by (SuperAdmin who created the user)
+                    null,               // No old password (new user)
+                    password            // New hashed password
+                );
+            }
+        } catch (Exception e) {
+            // Don't fail user creation if history recording fails
+            // Just log the error
+        }
+        
         return userMapper.toDto(savedUser);
     }
 

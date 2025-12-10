@@ -19,6 +19,9 @@ import com.event_management_system.mapper.EventMapper;
 import com.event_management_system.repository.EventRepository;
 import com.event_management_system.repository.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class EventService {
 
@@ -33,6 +36,9 @@ public class EventService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private UserActivityHistoryService activityHistoryService;
     
     @Transactional
     public EventResponseDTO createEvent(@NonNull EventRequestDTO eventRequestDTO, @NonNull Long currentUserId) {
@@ -59,6 +65,23 @@ public class EventService {
         
         event.recordCreation("system");
         Event savedEvent = eventRepository.save(event);
+        
+        // Record activity: Event Created
+        userRepository.findById(currentUserId).ifPresent(user -> {
+            try {
+                activityHistoryService.recordActivity(
+                    Objects.requireNonNull(user, "User should not be null"),
+                    com.event_management_system.entity.UserActivityHistory.ActivityType.EVENT_CREATED,
+                    "Event: " + savedEvent.getTitle(),
+                    "0.0.0.0",  // IP will be captured from controller if needed
+                    "system",   // Device ID
+                    java.util.UUID.randomUUID().toString()  // Session ID
+                );
+            } catch (Exception e) {
+                log.error("Failed to record event creation activity: {}", e.getMessage());
+            }
+        });
+        
         return eventMapper.toDto(savedEvent);
     }
 
@@ -93,6 +116,23 @@ public class EventService {
             // Update audit fields
             existingEvent.recordUpdate("system");
             Event updatedEvent = eventRepository.save(existingEvent);
+            
+            // Record activity: Event Updated
+            userRepository.findById(currentUserId).ifPresent(user -> {
+                try {
+                    activityHistoryService.recordActivity(
+                        Objects.requireNonNull(user, "User should not be null"),
+                        com.event_management_system.entity.UserActivityHistory.ActivityType.EVENT_UPDATED,
+                        "Event: " + updatedEvent.getTitle(),
+                        "0.0.0.0",
+                        "system",
+                        java.util.UUID.randomUUID().toString()
+                    );
+                } catch (Exception e) {
+                    log.error("Failed to record event update activity: {}", e.getMessage());
+                }
+            });
+            
             return eventMapper.toDto(updatedEvent);
         });
     }
@@ -103,8 +143,27 @@ public class EventService {
             if (!canManageEvent(event, currentUserId)) {
                 throw new RuntimeException("You don't have permission to delete this event");
             }
+            
+            String eventTitle = event.getTitle();  // Save title before deletion
             event.markDeleted();
             eventRepository.save(event);
+            
+            // Record activity: Event Deleted
+            userRepository.findById(currentUserId).ifPresent(user -> {
+                try {
+                    activityHistoryService.recordActivity(
+                        Objects.requireNonNull(user, "User should not be null"),
+                        com.event_management_system.entity.UserActivityHistory.ActivityType.EVENT_DELETED,
+                        "Event: " + eventTitle + " (ID: " + event.getId() + ")",
+                        "0.0.0.0",
+                        "system",
+                        java.util.UUID.randomUUID().toString()
+                    );
+                } catch (Exception e) {
+                    log.error("Failed to record event deletion activity: {}", e.getMessage());
+                }
+            });
+            
             return true;
         }).orElse(false);
     }

@@ -3,6 +3,8 @@ package com.event_management_system.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.event_management_system.dto.AuthResponseDTO;
+import com.event_management_system.dto.ChangePasswordRequestDTO;
 import com.event_management_system.dto.LoginRequestDTO;
 import com.event_management_system.dto.RefreshTokenRequestDTO;
 import com.event_management_system.service.AuthService;
@@ -124,13 +127,15 @@ public class AuthController {
             description = "Authenticate user with email and password. Returns access token, refresh token, and user details."
     )
     public ResponseEntity<AuthResponseDTO> login(
-            @Valid @RequestBody LoginRequestDTO loginRequest) {
+            @Valid @RequestBody LoginRequestDTO loginRequest,
+            jakarta.servlet.http.HttpServletRequest request) {
         
         log.info("Login attempt for email: {}", loginRequest.getEmail());
         
         try {
             // Call AuthService to authenticate and generate tokens
-            AuthResponseDTO authResponse = authService.authenticate(loginRequest);
+            // Pass HttpServletRequest to capture IP address and device info
+            AuthResponseDTO authResponse = authService.authenticate(loginRequest, request);
             
             log.info("Login successful for email: {}", loginRequest.getEmail());
             
@@ -336,7 +341,8 @@ public class AuthController {
     )
     public ResponseEntity<?> logout(
             @Parameter(description = "Authorization header with Bearer token")
-            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+            jakarta.servlet.http.HttpServletRequest request) {
         
         log.info("Logout request received");
         
@@ -350,7 +356,8 @@ public class AuthController {
             }
             
             // Call AuthService to logout (removes UUID from cache)
-            authService.logout(token);
+            // Pass HttpServletRequest to capture IP and device info for logout tracking
+            authService.logout(token, request);
             
             log.info("User logged out successfully");
             
@@ -403,4 +410,113 @@ public class AuthController {
             this.message = message;
         }
     }
+    
+    /**
+     * Change password endpoint: User changes their own password
+     * 
+     * FLOW:
+     * 1. Extract current user ID from SecurityContext (authenticated user)
+     * 2. Validate old password, new password, confirmation
+     * 3. AuthService verifies old password and updates to new password
+     * 4. Password change is logged in UserPasswordHistory
+     * 5. Activity is logged in UserActivityHistory
+     * 
+     * REQUEST:
+     * POST /api/auth/change-password
+     * Authorization: Bearer <access-token>
+     * Content-Type: application/json
+     * {
+     *     "oldPassword": "currentPassword123",
+     *     "newPassword": "newPassword456",
+     *     "confirmPassword": "newPassword456"
+     * }
+     * 
+     * RESPONSE SUCCESS (HTTP 200):
+     * {
+     *     "message": "Password changed successfully"
+     * }
+     * 
+     * RESPONSE ERROR (HTTP 400):
+     * {
+     *     "message": "Current password is incorrect"
+     * }
+     * OR
+     * {
+     *     "message": "New password and confirmation do not match"
+     * }
+     * 
+     * SECURITY:
+     * - Requires valid JWT token (user must be authenticated)
+     * - User can only change their own password
+     * - Old password must be correct
+     * - New password must be different from old
+     * - Password is hashed with BCrypt before storing
+     * 
+     * @param changePasswordRequest Request with old password, new password, confirmation
+     * @return Success or error message
+     */
+    @PostMapping("/change-password")
+    @Operation(
+        summary = "Change user password",
+        description = "Allows authenticated user to change their own password. Requires old password verification."
+    )
+    public ResponseEntity<MessageResponseDTO> changePassword(
+            @Parameter(description = "Password change request with old password, new password, and confirmation")
+            @Valid @RequestBody ChangePasswordRequestDTO changePasswordRequest) {
+        
+        try {
+            // Get current authenticated user ID from SecurityContext
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                log.error("User not authenticated");
+                return new ResponseEntity<>(
+                    new MessageResponseDTO("User not authenticated"),
+                    HttpStatus.UNAUTHORIZED
+                );
+            }
+            
+            Long userId = Long.valueOf(authentication.getName());
+            log.info("Password change request for user ID: {}", userId);
+            
+            // Call AuthService to change password
+            authService.changePassword(
+                userId,
+                changePasswordRequest.getOldPassword(),
+                changePasswordRequest.getNewPassword(),
+                changePasswordRequest.getConfirmPassword()
+            );
+            
+            log.info("Password changed successfully for user: {}", userId);
+            
+            return new ResponseEntity<>(
+                new MessageResponseDTO("Password changed successfully"),
+                HttpStatus.OK
+            );
+            
+        } catch (RuntimeException e) {
+            log.error("Password change failed: {}", e.getMessage());
+            return new ResponseEntity<>(
+                new MessageResponseDTO(e.getMessage()),
+                HttpStatus.BAD_REQUEST
+            );
+        } catch (Exception e) {
+            log.error("Unexpected error during password change: {}", e.getMessage());
+            return new ResponseEntity<>(
+                new MessageResponseDTO("An error occurred while changing password"),
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+    
+    /**
+     * Inner DTO: Generic message response
+     */
+    public static class MessageResponseDTO {
+        public String message;
+
+        public MessageResponseDTO(String message) {
+            this.message = message;
+        }
+    }
 }
+

@@ -1,5 +1,7 @@
 package com.event_management_system.service;
 
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import com.event_management_system.dto.LoginRequestDTO;
 import com.event_management_system.entity.User;
 import com.event_management_system.mapper.UserMapper;
 import com.event_management_system.repository.UserRepository;
+import com.event_management_system.util.RequestInfoUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,16 +113,28 @@ public class AuthService {
 
     @Autowired
     private UserMapper userMapper;
+    
+    @Autowired
+    private UserLoginLogoutHistoryService loginLogoutHistoryService;
+    
+    @Autowired
+    private UserActivityHistoryService activityHistoryService;
+    
+    @Autowired
+    private RequestInfoUtil requestInfoUtil;
+    
+    @Autowired
+    private UserPasswordHistoryService passwordHistoryService;
 
     /**
-     * Authenticate user with email and password
+     * Authenticate user with email and password (with request context for history tracking)
      * 
-     * IMPLEMENTS DIAGRAM 3: Complete Login Flow
+     * IMPLEMENTS DIAGRAM 3: Complete Login Flow + History Tracking
      * 
      * WHEN CALLED:
      * - User clicks "Login" button
      * - Client sends email & password to POST /api/auth/login
-     * - AuthController calls authService.authenticate(loginRequest)
+     * - AuthController calls authService.authenticate(loginRequest, request)
      * 
      * PROCESS:
      * 1. Validate input (email & password not empty)
@@ -128,13 +143,16 @@ public class AuthService {
      * 4. Generate access token with UUID
      * 5. Generate refresh token with UUID
      * 6. Cache both token UUIDs with expiration
-     * 7. Build and return AuthResponseDTO
+     * 7. Record login history with IP, device info
+     * 8. Record activity history
+     * 9. Build and return AuthResponseDTO
      * 
      * @param loginRequest Contains email and password from client
+     * @param request HttpServletRequest for extracting IP and device info
      * @return AuthResponseDTO with tokens and user info
      * @throws RuntimeException if credentials invalid
      */
-    public AuthResponseDTO authenticate(LoginRequestDTO loginRequest) {
+    public AuthResponseDTO authenticate(LoginRequestDTO loginRequest, jakarta.servlet.http.HttpServletRequest request) {
         log.info("Attempting authentication for email: {}", loginRequest.getEmail());
 
         // STEP 1: Validate input (basic validation, @Valid does most of this)
@@ -155,10 +173,6 @@ public class AuthService {
         log.debug("User found: {}", user.getId());
 
         // STEP 3: Compare password (Diagram 3, Step 4)
-        // PasswordEncoder.matches(plainText, hash)
-        // - Hashes plainText with same salt as hash
-        // - Compares the two hashes
-        // - Returns true if match, false otherwise
         log.debug("Validating password for user: {}", user.getId());
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             log.warn("Invalid password for user: {}", user.getId());
@@ -169,37 +183,60 @@ public class AuthService {
         log.info("Password validated successfully for user: {}", user.getId());
 
         // STEP 4: Generate access token (Diagram 3, Step 6)
-        // JwtService creates JWT with:
-        // - "sub": user ID
-        // - "tokenUuid": unique UUID for this token
-        // - "iat": issued at time
-        // - "exp": expiration time (45 minutes)
         String accessToken = jwtService.generateAccessToken(user.getId());
         log.debug("Access token generated for user: {}", user.getId());
 
         // STEP 5: Generate refresh token (Diagram 3, Step 6)
-        // Same structure as access token but with 7-day expiration
         String refreshToken = jwtService.generateRefreshToken(user.getId());
         log.debug("Refresh token generated for user: {}", user.getId());
 
         // STEP 6: Extract UUIDs from tokens and cache them (Diagram 3, Step 7-9)
-        // Get UUIDs from JWT payloads
         String accessTokenUuid = jwtService.getTokenUuidFromToken(accessToken);
         String refreshTokenUuid = jwtService.getTokenUuidFromToken(refreshToken);
 
         log.debug("Access Token UUID: {}, Refresh Token UUID: {}", accessTokenUuid, refreshTokenUuid);
 
         // STEP 7: Cache tokens with their UUIDs
-        // This allows:
-        // - Logout: Delete UUID from cache, token becomes invalid
-        // - Verification: Check if UUID exists in cache on each request
         tokenCacheService.cacheAccessToken(accessTokenUuid, user.getId());
         tokenCacheService.cacheRefreshToken(refreshTokenUuid, user.getId());
 
         log.info("Tokens cached for user: {}", user.getId());
+        
+        // STEP 7.5: Record login history and activity
+        if (request != null) {
+            try {
+                // Extract IP and device info
+                String ipAddress = requestInfoUtil.getClientIpAddress(request);
+                String deviceInfo = requestInfoUtil.getCompleteDeviceInfo(request);
+                String deviceId = requestInfoUtil.generateDeviceId(request);
+                
+                // Record login in UserLoginLogoutHistory
+                loginLogoutHistoryService.recordLogin(
+                    user,
+                    Objects.requireNonNull(accessTokenUuid, "Access token UUID should not be null"),
+                    Objects.requireNonNull(ipAddress, "IP address should not be null"),
+                    Objects.requireNonNull(deviceInfo, "Device info should not be null"),
+                    "SUCCESS"
+                );
+                
+                // Record activity in UserActivityHistory
+                activityHistoryService.recordActivity(
+                    user,
+                    com.event_management_system.entity.UserActivityHistory.ActivityType.USER_LOGIN,
+                    "Logged in from " + deviceInfo,
+                    ipAddress,
+                    deviceId,
+                    accessTokenUuid  // Session ID
+                );
+                
+                log.info("Login history recorded for user: {}", user.getId());
+            } catch (Exception e) {
+                // Don't fail login if history recording fails
+                log.error("Failed to record login history: {}", e.getMessage());
+            }
+        }
 
         // STEP 8: Build response DTO
-        // Convert user entity to DTO for response
         var userResponseDTO = userMapper.toUserResponseDTO(user);
 
         AuthResponseDTO authResponseDTO = new AuthResponseDTO();
@@ -212,6 +249,20 @@ public class AuthService {
         log.info("Authentication successful for user: {} (email: {})", user.getId(), user.getEmail());
 
         return authResponseDTO;
+    }
+
+    /**
+     * Authenticate user with email and password (backward compatibility - no request context)
+     * 
+     * This method exists for backward compatibility or when request context is not available.
+     * It calls the main authenticate method with null request.
+     * 
+     * @param loginRequest Contains email and password from client
+     * @return AuthResponseDTO with tokens and user info
+     * @throws RuntimeException if credentials invalid
+     */
+    public AuthResponseDTO authenticate(LoginRequestDTO loginRequest) {
+        return authenticate(loginRequest, null);
     }
 
     /**
@@ -299,36 +350,25 @@ public class AuthService {
     }
 
     /**
-     * Logout user by invalidating tokens
+     * Logout user by invalidating tokens (with request context for activity tracking)
      * 
      * WHEN CALLED:
      * - User clicks "Logout" button
      * - Client sends token to POST /api/auth/logout
-     * - AuthController calls authService.logout(token)
+     * - AuthController calls authService.logout(token, request)
      * 
      * PROCESS:
      * 1. Validate token (signature & expiration)
      * 2. Extract token UUID from token
      * 3. Delete UUID from cache
-     * 4. Even if client uses same token later, UUID not in cache → 401
-     * 
-     * WHY this works:
-     * - Token itself is still valid (signature & expiration OK)
-     * - But UUID not in cache means token is "logged out"
-     * - On next request, JwtAuthenticationFilter checks cache
-     * - Cache returns null → User not authenticated
-     * - Request gets 401
-     * 
-     * SECURITY:
-     * - Token can't be used after logout
-     * - UUID cache provides server-side logout
-     * - Doesn't require database changes
-     * - Works across multiple servers (when using Redis)
+     * 4. Record logout in history
+     * 5. Record activity
      * 
      * @param token Access token to logout
+     * @param request HttpServletRequest for extracting IP and device info
      * @throws RuntimeException if token invalid
      */
-    public void logout(String token) {
+    public void logout(String token, jakarta.servlet.http.HttpServletRequest request) {
         log.info("Attempting logout");
 
         // STEP 1: Validate token
@@ -337,14 +377,55 @@ public class AuthService {
             throw new RuntimeException("Invalid token");
         }
 
-        // STEP 2: Extract token UUID
+        // STEP 2: Extract token UUID and user ID
         String tokenUuid = jwtService.getTokenUuidFromToken(token);
-        log.debug("Extracted token UUID: {}", tokenUuid);
+        Long userId = jwtService.getUserIdFromToken(token);
+        log.debug("Extracted token UUID: {}, User ID: {}", tokenUuid, userId);
 
         // STEP 3: Remove from cache (invalidate token)
         tokenCacheService.removeTokenFromCache(tokenUuid);
+        
+        // STEP 4: Record logout in history
+        // Update logout time for this session
+        loginLogoutHistoryService.recordLogout(
+            Objects.requireNonNull(tokenUuid, "Token UUID should not be null"));
+        
+        // STEP 5: Record logout activity
+        if (request != null && userId != null) {
+            try {
+                User user = userRepository.findById(userId).orElse(null);
+                if (user != null) {
+                    String ipAddress = requestInfoUtil.getClientIpAddress(request);
+                    String deviceId = requestInfoUtil.generateDeviceId(request);
+                    
+                    activityHistoryService.recordActivity(
+                        user,
+                        com.event_management_system.entity.UserActivityHistory.ActivityType.USER_LOGOUT,
+                        "Logged out",
+                        ipAddress,
+                        deviceId,
+                        tokenUuid  // Session ID
+                    );
+                    
+                    log.info("Logout activity recorded for user: {}", userId);
+                }
+            } catch (Exception e) {
+                // Don't fail logout if activity recording fails
+                log.error("Failed to record logout activity: {}", e.getMessage());
+            }
+        }
 
         log.info("User logged out successfully, token UUID removed from cache");
+    }
+    
+    /**
+     * Logout user by invalidating tokens (backward compatibility - no request context)
+     * 
+     * @param token Access token to logout
+     * @throws RuntimeException if token invalid
+     */
+    public void logout(String token) {
+        logout(token, null);
     }
 
     /**
@@ -374,4 +455,108 @@ public class AuthService {
     public int getActiveTokenCount() {
         return tokenCacheService.getTokenCacheSize();
     }
+    
+    /**
+     * Change user password
+     * 
+     * WHEN CALLED:
+     * - User wants to change their password
+     * - Called from POST /api/auth/change-password
+     * 
+     * FLOW:
+     * 1. Verify old password is correct
+     * 2. Verify new password and confirmation match
+     * 3. Hash new password with BCrypt
+     * 4. Update user password in database
+     * 5. Record password change in history
+     * 6. Record activity in user activity history
+     * 
+     * SECURITY:
+     * - Old password must match current password
+     * - New password must be different from old
+     * - Password is hashed with BCrypt before storing
+     * - Password change is logged for audit trail
+     * 
+     * @param userId - ID of user changing password
+     * @param oldPassword - Current password (for verification)
+     * @param newPassword - New password to set
+     * @param confirmPassword - Confirmation of new password
+     * @throws RuntimeException if validation fails
+     */
+    public void changePassword(Long userId, String oldPassword, String newPassword, String confirmPassword) {
+        log.info("Processing password change for user ID: {}", userId);
+        
+        // Validate userId is not null
+        if (userId == null) {
+            throw new RuntimeException("User ID cannot be null");
+        }
+        
+        // Step 1: Fetch user
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Step 2: Verify old password is correct
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            log.warn("Password change failed for user {}: Incorrect old password", userId);
+            throw new RuntimeException("Current password is incorrect");
+        }
+        
+        // Step 3: Verify new password and confirmation match
+        if (!newPassword.equals(confirmPassword)) {
+            log.warn("Password change failed for user {}: Passwords do not match", userId);
+            throw new RuntimeException("New password and confirmation do not match");
+        }
+        
+        // Step 4: Verify new password is different from old
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            log.warn("Password change failed for user {}: New password same as old", userId);
+            throw new RuntimeException("New password must be different from current password");
+        }
+        
+        // Step 5: Store old password hash for history
+        String oldPasswordHash = user.getPassword();
+        
+        // Step 6: Hash new password with BCrypt
+        String newPasswordHash = passwordEncoder.encode(newPassword);
+        
+        // Step 7: Update user password
+        user.setPassword(newPasswordHash);
+        user.recordUpdate(user.getFullName());
+        userRepository.save(user);
+        
+        log.info("Password updated successfully for user: {}", userId);
+        
+        // Step 8: Record password change in history
+        try {
+            if (newPasswordHash != null) {
+                passwordHistoryService.recordPasswordChange(
+                    user,               // User whose password changed
+                    user,               // Changed by themselves
+                    oldPasswordHash,    // Old password hash
+                    newPasswordHash     // New password hash
+                );
+                log.info("Password change recorded in history for user: {}", userId);
+            }
+        } catch (Exception e) {
+            log.error("Failed to record password change history for user {}: {}", userId, e.getMessage());
+            // Don't fail the password change if history recording fails
+        }
+        
+        // Step 9: Record activity in user activity history
+        try {
+            activityHistoryService.recordActivity(
+                user,
+                com.event_management_system.entity.UserActivityHistory.ActivityType.PASSWORD_CHANGED,
+                "Password changed successfully",
+                "0.0.0.0",  // IP not available in this context
+                "system",   // Device ID not available
+                ""          // Session ID not available (empty string instead of null)
+            );
+            log.info("Password change activity recorded for user: {}", userId);
+        } catch (Exception e) {
+            log.error("Failed to record password change activity for user {}: {}", userId, e.getMessage());
+            // Don't fail the password change if activity recording fails
+        }
+    }
 }
+

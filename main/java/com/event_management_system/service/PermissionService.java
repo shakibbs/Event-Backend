@@ -81,6 +81,7 @@ public class PermissionService {
         createPermissionIfNotExists("role.manage.all", "Can manage all roles in the system");
         createPermissionIfNotExists("event.manage.all", "Can manage all events in the system");
         createPermissionIfNotExists("system.config", "Can configure system settings");
+        createPermissionIfNotExists("history.view.all", "Can view all users' history (login, password, activity)");
 
         // Admin permissions
         createPermissionIfNotExists("user.manage.own", "Can manage own users/team");
@@ -92,6 +93,9 @@ public class PermissionService {
         createPermissionIfNotExists("event.view.public", "Can view public events");
         createPermissionIfNotExists("event.view.invited", "Can view invited events");
         createPermissionIfNotExists("event.attend", "Can attend events");
+        
+        // Shared permissions (Admin & Attendee)
+        createPermissionIfNotExists("history.view.own", "Can view own history (login, password, activity)");
     }
 
     private void createPermissionIfNotExists(String name, String description) {

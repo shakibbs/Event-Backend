@@ -5,8 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,98 +15,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.event_management_system.service.CustomUserDetailsService;
 import com.event_management_system.security.JwtAuthenticationFilter;
-import com.event_management_system.service.JwtService;
-import com.event_management_system.service.CustomUserDetailsService;
 
-/**
- * SecurityConfig: Configure Spring Security for JWT-based authentication
- * 
- * ARCHITECTURE (From Diagram 1: Spring Security Filter Chain):
- * 
- * Request → JwtAuthenticationFilter → Spring Security Filter Chain
- *          ↓
- *          1. Extract JWT token from Authorization header
- *          2. Validate token (signature, expiration)
- *          3. Verify token UUID in cache
- *          4. Load user from database
- *          5. Store in SecurityContext
- *          ↓
- * Security Context → Authorization Check (public/protected)
- *          ↓
- *          If public: Allow access
- *          If protected: Check authentication in SecurityContext
- *          ↓
- * Request → Controller → Response
- * 
- * KEY POINTS:
- * - Stateless authentication: No sessions, pure JWT
- * - SessionCreationPolicy.STATELESS: No HttpSession created
- * - JwtAuthenticationFilter: Custom filter before UsernamePasswordAuthenticationFilter
- * - Public endpoints: /api/auth/login, /api/auth/refresh, /swagger-ui.html, /api-docs/**
- * - Protected endpoints: Everything else requires authentication
- * - Password encoding: BCrypt (automatically compares on login)
- * - Exception handling: 401 Unauthorized, 403 Forbidden
- * 
- * JWT FLOW IN THIS CONFIG:
- * 1. Client: POST /api/auth/login with email/password
- * 2. AuthController.login() calls AuthService.authenticate()
- * 3. AuthService uses PasswordEncoder to verify password (BCrypt compare)
- * 4. AuthService generates JWT tokens with UUID
- * 5. Client receives tokens, stores in localStorage
- * 6. Client: Next request with Authorization: Bearer <token>
- * 7. JwtAuthenticationFilter intercepts:
- *    - Extracts token from header
- *    - Validates signature/expiration
- *    - Verifies UUID in cache
- *    - Loads user from database
- *    - Stores in SecurityContext
- * 8. Spring Security checks if endpoint is protected:
- *    - If public: Allow access
- *    - If protected: Check SecurityContext (should have authentication)
- * 9. If authentication needed but missing: Return 401 Unauthorized
- * 10. If role/permission denied: Return 403 Forbidden
- * 
- * BCRYPT PASSWORD ENCODER:
- * - One-way hashing (can't decrypt)
- * - Uses salt (random per password)
- * - Takes ~100ms per comparison (intentional slowdown for brute force protection)
- * - Login flow:
- *   1. User enters password: "password123"
- *   2. PasswordEncoder.matches(plaintext, hashedPassword)
- *   3. Hash "password123" and compare with stored hash
- *   4. If match: Authentication successful
- *   5. If no match: Authentication failed
- * 
- * FILTER CHAIN ORDER (Important!):
- * Request → JwtAuthenticationFilter (FIRST - extract & validate token)
- *        → UsernamePasswordAuthenticationFilter (login/logout form-based)
- *        → AuthorizationFilter (check if authorized for endpoint)
- *        → ... other filters ...
- * 
- * WHY BEFORE UsernamePasswordAuthenticationFilter?
- * - UsernamePasswordAuthenticationFilter expects form-based login
- * - JwtAuthenticationFilter handles bearer token login
- * - Must run first to populate SecurityContext for downstream filters
- * 
- * @EnableWebSecurity: Enable Spring Security web security
- * @EnableMethodSecurity: Enable @PreAuthorize, @PostAuthorize on methods
- */
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
-
-    @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * Define password encoder bean: BCryptPasswordEncoder
-     * 
      * SECURITY:
      * - Uses BCrypt algorithm with strength 12
      * - Automatically handles salt generation
@@ -123,31 +42,11 @@ public class SecurityConfig {
     }
 
     /**
-     * Authentication provider using UserDetailsService and PasswordEncoder
-     * 
-     * This bean configures how authentication is performed:
-     * 1. UserDetailsService: Loads user from database
-     * 2. PasswordEncoder: Verifies password using BCrypt
-     * 
-     * Used during AuthenticationManager initialization.
-     * 
-     * @return DaoAuthenticationProvider
-     */
-    @SuppressWarnings("deprecation")
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(customUserDetailsService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder());
-        return authenticationProvider;
-    }
-
-    /**
      * Define authentication manager bean
      * 
      * AUTHENTICATION MANAGER:
      * - Central component that authenticates users
-     * - Uses AuthenticationProvider (configured above)
+     * - Uses AuthenticationProvider (configured automatically by Spring)
      * - AuthenticationProvider uses UserDetailsService + PasswordEncoder
      * 
      * WHEN USED:

@@ -147,7 +147,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
             // Query database: SELECT * FROM app_users WHERE id = ?
             Long parsedUserId = Long.valueOf(userId);
-            @SuppressWarnings("null")
+            if (parsedUserId == null) {
+                throw new UsernameNotFoundException("Invalid user ID: " + userId);
+            }
             User user = userRepository.findById(parsedUserId)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + userId));
 

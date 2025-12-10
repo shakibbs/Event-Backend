@@ -164,15 +164,15 @@ public class RoleService {
 
         // Create SuperAdmin role with all permissions
         createRoleWithPermissions("SuperAdmin", 
-                "user.manage.all", "role.manage.all", "event.manage.all", "system.config");
+                "user.manage.all", "role.manage.all", "event.manage.all", "system.config", "history.view.all");
 
         // Create Admin role with limited permissions
         createRoleWithPermissions("Admin", 
-                "user.manage.own", "event.manage.own", "event.view.all", "event.invite");
+                "user.manage.own", "event.manage.own", "event.view.all", "event.invite", "history.view.own");
 
         // Create Attendee role with basic permissions
         createRoleWithPermissions("Attendee", 
-                "event.view.public", "event.view.invited", "event.attend");
+                "event.view.public", "event.view.invited", "event.attend", "history.view.own");
     }
     
     private void createRoleWithPermissions(String roleName, String... permissionNames) {

@@ -1,5 +1,7 @@
 package com.event_management_system.mapper;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.event_management_system.dto.RoleResponseDTO;
@@ -10,6 +12,9 @@ import com.event_management_system.entity.User;
 
 @Component
 public class UserMapper {
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public User toEntity(UserRequestDTO userRequestDTO) {
         if (userRequestDTO == null) {
@@ -19,7 +24,11 @@ public class UserMapper {
         User user = new User();
         user.setFullName(userRequestDTO.getFullName());
         user.setEmail(userRequestDTO.getEmail());
-        user.setPassword(userRequestDTO.getPassword());
+        
+        // Hash password with BCrypt before storing
+        if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        }
         
         // Handle role assignment if roleId is provided
         if (userRequestDTO.getRoleId() != null) {
@@ -70,7 +79,11 @@ public class UserMapper {
 
         existingUser.setFullName(userRequestDTO.getFullName());
         existingUser.setEmail(userRequestDTO.getEmail());
-        existingUser.setPassword(userRequestDTO.getPassword());
+        
+        // Hash password with BCrypt if provided (only update if new password given)
+        if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
+        }
         
         // Handle role updates if roleId is provided
         if (userRequestDTO.getRoleId() != null) {

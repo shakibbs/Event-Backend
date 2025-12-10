@@ -1,5 +1,8 @@
 package com.event_management_system.mapper;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.stereotype.Component;
 
 import com.event_management_system.dto.EventRequestDTO;
@@ -17,10 +20,17 @@ public class EventMapper {
         Event event = new Event();
         event.setTitle(dto.getTitle());
         event.setDescription(dto.getDescription());
-        event.setStartTime(dto.getStartTime());
-        event.setEndTime(dto.getEndTime());
+        
+        // Convert string dates to LocalDateTime
+        if (dto.getStartTime() != null) {
+            event.setStartTime(LocalDateTime.parse(dto.getStartTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        if (dto.getEndTime() != null) {
+            event.setEndTime(LocalDateTime.parse(dto.getEndTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        
         event.setLocation(dto.getLocation());
-        // Note: EventRequestDTO doesn't have visibility field, using default from entity
+        event.setVisibility(dto.getVisibility());
         
         return event;
     }
@@ -34,16 +44,30 @@ public class EventMapper {
         dto.setId(entity.getId());
         dto.setTitle(entity.getTitle());
         dto.setDescription(entity.getDescription());
-        dto.setStartTime(entity.getStartTime());
-        dto.setEndTime(entity.getEndTime());
+        
+        // Convert LocalDateTime to string format
+        if (entity.getStartTime() != null) {
+            dto.setStartTime(entity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        if (entity.getEndTime() != null) {
+            dto.setEndTime(entity.getEndTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        
         dto.setLocation(entity.getLocation());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
+        dto.setVisibility(entity.getVisibility());
+        
+        // Convert LocalDateTime to string format
+        if (entity.getCreatedAt() != null) {
+            dto.setCreatedAt(entity.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        if (entity.getUpdatedAt() != null) {
+            dto.setUpdatedAt(entity.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setUpdatedBy(entity.getUpdatedBy());
         dto.setStatus(entity.getStatus());
         dto.setDeleted(entity.getDeleted());
-        // Note: EventResponseDTO doesn't have visibility field
         
         return dto;
     }
@@ -55,9 +79,18 @@ public class EventMapper {
         
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
-        entity.setStartTime(dto.getStartTime());
-        entity.setEndTime(dto.getEndTime());
+        
+        // Convert string dates to LocalDateTime
+        if (dto.getStartTime() != null) {
+            entity.setStartTime(LocalDateTime.parse(dto.getStartTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        if (dto.getEndTime() != null) {
+            entity.setEndTime(LocalDateTime.parse(dto.getEndTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        
         entity.setLocation(dto.getLocation());
-        // Note: EventRequestDTO doesn't have visibility field, not updating
+        if (dto.getVisibility() != null) {
+            entity.setVisibility(dto.getVisibility());
+        }
     }
 }

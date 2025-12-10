@@ -16,6 +16,8 @@ import com.event_management_system.dto.AuthResponseDTO;
 import com.event_management_system.dto.ChangePasswordRequestDTO;
 import com.event_management_system.dto.LoginRequestDTO;
 import com.event_management_system.dto.RefreshTokenRequestDTO;
+import com.event_management_system.entity.User;
+import com.event_management_system.repository.UserRepository;
 import com.event_management_system.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,6 +56,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Login endpoint: Authenticate user with email and password
@@ -475,8 +480,19 @@ public class AuthController {
                 );
             }
             
-            Long userId = Long.valueOf(authentication.getName());
-            log.info("Password change request for user ID: {}", userId);
+            // Extract user ID from the authentication principal
+            // The principal is a UserDetails object, and we need to get the user from the database
+            // to get the actual user ID since the username is set to email in CustomUserDetailsService
+            org.springframework.security.core.userdetails.UserDetails userDetails =
+                (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
+            
+            // Find user by email (which is the username in UserDetails)
+            String email = userDetails.getUsername();
+            User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            
+            Long userId = user.getId();
+            log.info("Password change request for user ID: {} (email: {})", userId, email);
             
             // Call AuthService to change password
             authService.changePassword(

@@ -43,8 +43,13 @@ public class EventService {
     @Transactional
     public EventResponseDTO createEvent(@NonNull EventRequestDTO eventRequestDTO, @NonNull Long currentUserId) {
         // Check permission before creating event
-        if (!hasPermission(currentUserId, "event.manage.own") &&
-            !hasPermission(currentUserId, "event.manage.all")) {
+        boolean hasManageOwn = hasPermission(currentUserId, "event.manage.own");
+        boolean hasManageAll = hasPermission(currentUserId, "event.manage.all");
+        
+        log.info("User {} - hasPermission('event.manage.own'): {}", currentUserId, hasManageOwn);
+        log.info("User {} - hasPermission('event.manage.all'): {}", currentUserId, hasManageAll);
+        
+        if (!hasManageOwn && !hasManageAll) {
             throw new RuntimeException("You don't have permission to create events");
         }
         

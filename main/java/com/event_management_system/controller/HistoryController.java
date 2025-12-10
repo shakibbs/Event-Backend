@@ -70,7 +70,7 @@ public class HistoryController {
     
     /**
      * Helper method: Get current authenticated user ID
-     * 
+     *
      * @return User ID from security context
      */
     private Long getCurrentUserId() {
@@ -79,8 +79,12 @@ public class HistoryController {
             throw new RuntimeException("User not authenticated");
         }
         
-        // The principal contains user ID (set in JwtAuthenticationFilter)
-        return Long.valueOf(authentication.getName());
+        // Get user details from authentication principal
+        org.springframework.security.core.userdetails.User userDetails =
+            (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
+        
+        // Extract user ID from username (which contains email) by querying the user service
+        return userService.getUserIdByEmail(userDetails.getUsername());
     }
     
     /**

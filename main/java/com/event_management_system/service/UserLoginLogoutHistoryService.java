@@ -68,6 +68,7 @@ public class UserLoginLogoutHistoryService {
         UserLoginLogoutHistory history = UserLoginLogoutHistory.builder()
                 .user(user)
                 .userToken(userToken)
+                .userType(user.getRole() != null ? user.getRole().getName() : "UNKNOWN")
                 .loginTime(LocalDateTime.now())
                 .logoutTime(null)  // Not logged out yet
                 .requestIp(requestIp)

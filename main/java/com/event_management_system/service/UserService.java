@@ -3,25 +3,38 @@ package com.event_management_system.service;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.event_management_system.dto.UserRequestDTO;
 import com.event_management_system.dto.UserResponseDTO;
+import com.event_management_system.entity.Permission;
 import com.event_management_system.entity.Role;
 import com.event_management_system.entity.User;
+import com.event_management_system.entity.UserActivityHistory;
 import com.event_management_system.mapper.UserMapper;
 import com.event_management_system.repository.EventRepository;
 import com.event_management_system.repository.RoleRepository;
 import com.event_management_system.repository.UserRepository;
+import com.event_management_system.util.RequestInfoUtil;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
+@DependsOn({"permissionService", "roleService"})
 public class UserService {
 
     @Autowired
@@ -38,6 +51,21 @@ public class UserService {
     
     @Autowired
     private UserPasswordHistoryService passwordHistoryService;
+    
+    @Autowired
+    private UserActivityHistoryService activityHistoryService;
+    
+    @Autowired
+    private RequestInfoUtil requestInfoUtil;
+    
+    @Autowired
+    private JwtService jwtService;
+    
+    @Autowired(required = false)
+    private HttpServletRequest request;
+    
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
@@ -56,6 +84,7 @@ public class UserService {
         }
         
         User savedUser = userRepository.save(user);
+        User currentUser = getCurrentUser();
         
         // Record password creation in history (for new user, no old password)
         try {
@@ -63,14 +92,32 @@ public class UserService {
             if (password != null) {
                 passwordHistoryService.recordPasswordChange(
                     savedUser,          // User whose password was set
-                    savedUser,          // Created by (SuperAdmin who created the user)
+                    currentUser,        // Created by (who created the user)
                     null,               // No old password (new user)
                     password            // New hashed password
                 );
             }
         } catch (Exception e) {
-            // Don't fail user creation if history recording fails
-            // Just log the error
+            log.error("Failed to record password history: {}", e.getMessage());
+        }
+        
+        // Record user creation activity with full details
+        try {
+            String ipAddress = getClientIp();
+            String deviceId = getDeviceId();
+            String sessionId = getSessionId();
+            
+            activityHistoryService.recordActivity(
+                currentUser,
+                UserActivityHistory.ActivityType.USER_CREATED,
+                "Created user: " + savedUser.getFullName() + " (" + savedUser.getEmail() + ") with role: " + 
+                    (savedUser.getRole() != null ? savedUser.getRole().getName() : "None"),
+                ipAddress,
+                deviceId,
+                sessionId
+            );
+        } catch (Exception e) {
+            log.error("Failed to record user creation activity: {}", e.getMessage());
         }
         
         return userMapper.toDto(savedUser);
@@ -89,6 +136,13 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    public Long getUserIdByEmail(@NonNull String email) {
+        return userRepository.findByEmail(email)
+                .map(user -> user.getId())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    @Transactional(readOnly = true)
     public List<UserResponseDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream()
@@ -104,9 +158,39 @@ public class UserService {
         }
         
         return userRepository.findById(targetUserId).map(existingUser -> {
+            String oldFullName = existingUser.getFullName();
+            String oldEmail = existingUser.getEmail();
             userMapper.updateEntity(userRequestDTO, existingUser);
             existingUser.recordUpdate("system");
             User updatedUser = userRepository.save(existingUser);
+            
+            // Record user update activity with full details
+            try {
+                User currentUser = getCurrentUser();
+                String ipAddress = getClientIp();
+                String deviceId = getDeviceId();
+                String sessionId = getSessionId();
+                
+                String description = "Updated user: " + oldFullName;
+                if (!oldEmail.equals(updatedUser.getEmail())) {
+                    description += " | Email: " + oldEmail + " → " + updatedUser.getEmail();
+                }
+                if (!oldFullName.equals(updatedUser.getFullName())) {
+                    description += " | Name: " + oldFullName + " → " + updatedUser.getFullName();
+                }
+                
+                activityHistoryService.recordActivity(
+                    currentUser,
+                    UserActivityHistory.ActivityType.USER_UPDATED,
+                    description,
+                    ipAddress,
+                    deviceId,
+                    sessionId
+                );
+            } catch (Exception e) {
+                log.error("Failed to record user update activity: {}", e.getMessage());
+            }
+            
             return userMapper.toDto(updatedUser);
         });
     }
@@ -119,52 +203,100 @@ public class UserService {
         }
         
         return userRepository.findById(targetUserId).map(user -> {
+            String deletedUserName = user.getFullName();
+            String deletedUserEmail = user.getEmail();
             user.markDeleted();
             userRepository.save(user);
+            
+            // Record user deletion activity with full details
+            try {
+                User currentUser = getCurrentUser();
+                String ipAddress = getClientIp();
+                String deviceId = getDeviceId();
+                String sessionId = getSessionId();
+                
+                activityHistoryService.recordActivity(
+                    currentUser,
+                    UserActivityHistory.ActivityType.USER_DELETED,
+                    "Deleted user: " + deletedUserName + " (" + deletedUserEmail + ") | ID: " + targetUserId,
+                    ipAddress,
+                    deviceId,
+                    sessionId
+                );
+            } catch (Exception e) {
+                log.error("Failed to record user deletion activity: {}", e.getMessage());
+            }
+            
             return true;
         }).orElse(false);
     }
     
     @Transactional
-    public boolean assignRoleToUser(@NonNull Long userId, @NonNull Long roleId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        Optional<Role> roleOpt = roleRepository.findById(roleId);
+    public void assignRoleToUser(@NonNull Long userId, @NonNull Long roleId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
         
-        if (userOpt.isPresent() && roleOpt.isPresent()) {
-            User user = userOpt.get();
-            
-            // User can only have one role, so replace existing role
-            user.setRole(roleOpt.get());
-            user.recordUpdate("system");
-            userRepository.save(user);
-            return true;
-        }
-        return false;
-    }
-    
-    @Transactional
-    public boolean removeRoleFromUser(@NonNull Long userId, @NonNull Long roleId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        Optional<Role> roleOpt = roleRepository.findById(roleId);
+        Role newRole = roleRepository.findById(roleId)
+            .orElseThrow(() -> new RuntimeException("Role not found with ID: " + roleId));
         
-        if (userOpt.isPresent() && roleOpt.isPresent()) {
-            User user = userOpt.get();
-            
-            // User can only have one role, so remove the role if it matches
-            if (user.getRole() != null && Objects.equals(user.getRole().getId(), roleId)) {
-                user.setRole(null);
-                user.recordUpdate("system");
-                userRepository.save(user);
-                return true;
+        Role oldRole = user.getRole();
+        Long oldRoleId = oldRole != null ? oldRole.getId() : null;
+        
+        // Assign new role
+        user.setRole(newRole);
+        user.recordUpdate("system");
+        userRepository.save(user);
+        
+        // Schedule activity logging to run after transaction commits
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    recordRoleActivityAsync(userId, roleId, oldRoleId, UserActivityHistory.ActivityType.ROLE_ASSIGNED);
+                } catch (Exception e) {
+                    log.error("Failed to record role assignment activity: {}", e.getMessage());
+                }
             }
-        }
-        return false;
+        });
     }
     
-    // Alias methods to match UserController expectations
     @Transactional
-    public boolean addRoleToUser(@NonNull Long userId, @NonNull Long roleId) {
-        return assignRoleToUser(userId, roleId);
+    public void removeRoleFromUser(@NonNull Long userId, @NonNull Long roleId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        
+        Role roleToRemove = roleRepository.findById(roleId)
+            .orElseThrow(() -> new RuntimeException("Role not found with ID: " + roleId));
+        
+        // Check if user actually has this role
+        if (user.getRole() == null || !Objects.equals(user.getRole().getId(), roleId)) {
+            throw new RuntimeException("User does not have role ID: " + roleId);
+        }
+        
+        Long oldRoleId = roleToRemove.getId();
+        
+        // Remove role
+        user.setRole(null);
+        user.recordUpdate("system");
+        userRepository.save(user);
+        
+        // Schedule activity logging to run after transaction commits
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    recordRoleActivityAsync(userId, null, oldRoleId, UserActivityHistory.ActivityType.ROLE_REVOKED);
+                } catch (Exception e) {
+                    log.error("Failed to record role revocation activity: {}", e.getMessage());
+                }
+            }
+        });
+    }
+    
+    // Alias method to match UserController expectations
+    @Transactional
+    public void addRoleToUser(@NonNull Long userId, @NonNull Long roleId) {
+        assignRoleToUser(userId, roleId);
     }
     
     @Transactional(readOnly = true)
@@ -178,11 +310,127 @@ public class UserService {
     @Transactional(readOnly = true)
     public boolean hasPermission(@NonNull Long userId, String permissionName) {
         return userRepository.findById(userId)
-                .map(user -> user.getRole() != null &&
-                       user.getRole().getPermissions() != null &&
-                       user.getRole().getPermissions().stream()
-                               .anyMatch(permission -> Objects.equals(permission.getName(), permissionName)))
+                .map(user -> {
+                    log.info("Checking permission '{}' for user {}", permissionName, userId);
+                    log.info("User role: {}", user.getRole() != null ? user.getRole().getName() : "null");
+                    
+                    if (user.getRole() != null && user.getRole().getPermissions() != null) {
+                        Set<Permission> permissions = user.getRole().getPermissions();
+                        log.info("User has {} permissions: {}", 
+                            permissions.size(), 
+                            permissions.stream().map(Permission::getName).collect(java.util.stream.Collectors.joining(", ")));
+                        
+                        boolean hasIt = permissions.stream()
+                                .anyMatch(permission -> Objects.equals(permission.getName(), permissionName));
+                        log.info("Has permission '{}': {}", permissionName, hasIt);
+                        return hasIt;
+                    }
+                    
+                    log.warn("User role or permissions is null");
+                    return false;
+                })
                 .orElse(false);
+    }
+    
+    /**
+     * Record role activity in a separate transaction to prevent rollback contamination.
+     * Uses REQUIRES_NEW propagation to create independent transaction.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    private void recordRoleActivityAsync(Long targetUserId, Long newRoleId, Long oldRoleId, UserActivityHistory.ActivityType activityType) {
+        try {
+            User targetUser = userRepository.findById(targetUserId).orElse(null);
+            if (targetUser == null) {
+                log.warn("Target user {} not found for activity logging", targetUserId);
+                return;
+            }
+            
+            User currentUser = getCurrentUser();
+            Role newRole = newRoleId != null ? roleRepository.findById(newRoleId).orElse(null) : null;
+            Role oldRole = oldRoleId != null ? roleRepository.findById(oldRoleId).orElse(null) : null;
+            
+            String ipAddress = getClientIp();
+            String deviceId = getDeviceId();
+            String sessionId = getSessionId();
+            
+            String description;
+            if (activityType == UserActivityHistory.ActivityType.ROLE_ASSIGNED) {
+                description = "Assigned role '" + (newRole != null ? newRole.getName() : "Unknown") + "' to user: " + targetUser.getFullName();
+                if (oldRole != null) {
+                    description += " | Previous role: " + oldRole.getName();
+                }
+            } else {
+                description = "Revoked role '" + (oldRole != null ? oldRole.getName() : "Unknown") + "' from user: " + targetUser.getFullName() + " (" + targetUser.getEmail() + ")";
+            }
+            
+            activityHistoryService.recordActivity(
+                currentUser,
+                activityType,
+                description,
+                ipAddress,
+                deviceId,
+                sessionId
+            );
+        } catch (Exception e) {
+            log.error("Failed to record role activity: {}", e.getMessage(), e);
+            // Don't throw - activity logging runs in separate transaction
+        }
+    }
+    
+    /**
+     * Get current authenticated user from SecurityContext
+     */
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
+        
+        // authentication.getName() returns email (from UserDetails.getUsername())
+        String email = authentication.getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + email));
+    }
+    
+    /**
+     * Get client IP address from request
+     */
+    private String getClientIp() {
+        if (request != null) {
+            return requestInfoUtil.getClientIpAddress(request);
+        }
+        return "0.0.0.0";
+    }
+    
+    /**
+     * Get device ID from request
+     */
+    private String getDeviceId() {
+        if (request != null) {
+            return requestInfoUtil.generateDeviceId(request);
+        }
+        return "unknown";
+    }
+    
+    /**
+     * Get session ID from JWT token (token UUID)
+     */
+    private String getSessionId() {
+        try {
+            if (request != null) {
+                String authHeader = request.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    String jwt = authHeader.substring(7);
+                    String tokenUuid = jwtService.getTokenUuidFromToken(jwt);
+                    if (tokenUuid != null && !tokenUuid.isEmpty()) {
+                        return tokenUuid;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not extract token UUID from JWT: {}", e.getMessage());
+        }
+        return "";
     }
     
     @Transactional(readOnly = true)
@@ -289,15 +537,15 @@ public class UserService {
             User superAdmin = new User();
             superAdmin.setFullName("Super Admin");
             superAdmin.setEmail("superadmin@ems.com");
-            superAdmin.setPassword("password"); // In production, this should be encrypted
+            superAdmin.setPassword(passwordEncoder.encode("SuperAdmin@123")); // BCrypt encoded
             superAdmin.recordCreation("system");
             
-            // Assign ADMIN role (using the role created in data.sql)
-            Optional<Role> adminRole = roleRepository.findByName("ADMIN");
-            if (adminRole.isPresent()) {
-                superAdmin.setRole(adminRole.get());
+            // Assign SuperAdmin role
+            Optional<Role> superAdminRole = roleRepository.findByName("SuperAdmin");
+            if (superAdminRole.isPresent()) {
+                superAdmin.setRole(superAdminRole.get());
             } else {
-                throw new RuntimeException("ADMIN role not found in database. Please ensure data.sql has been executed.");
+                throw new RuntimeException("SuperAdmin role not found in database. Please ensure RoleService has initialized.");
             }
             
             userRepository.save(superAdmin);

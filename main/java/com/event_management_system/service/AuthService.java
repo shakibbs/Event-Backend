@@ -174,8 +174,11 @@ public class AuthService {
 
         // STEP 3: Compare password (Diagram 3, Step 4)
         log.debug("Validating password for user: {}", user.getId());
+        log.debug("Input password: {}", loginRequest.getPassword());
+        log.debug("Stored hash: {}", user.getPassword());
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             log.warn("Invalid password for user: {}", user.getId());
+            log.warn("Password match failed - input: '{}', hash: '{}'", loginRequest.getPassword(), user.getPassword().substring(0, 20));
             // Don't reveal if password is wrong (security)
             throw new RuntimeException("Invalid credentials");
         }

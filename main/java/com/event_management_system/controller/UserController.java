@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.event_management_system.dto.UserRequestDTO;
 import com.event_management_system.dto.UserResponseDTO;
+import com.event_management_system.entity.User;
 import com.event_management_system.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,10 +75,13 @@ public class UserController {
     @Operation(summary = "Update a user", description = "Updates an existing user with provided details")
     public ResponseEntity<UserResponseDTO> updateUser(
             @Parameter(description = "ID of user to update") @PathVariable @NonNull Long userId,
-            @Valid @RequestBody @NonNull UserRequestDTO userRequestDTO) {
+            @Valid @RequestBody @NonNull UserRequestDTO userRequestDTO,
+            Authentication authentication) {
         
         try {
-            return userService.updateUser(1L, userId, userRequestDTO) // Using default user ID
+            // Get current user ID from authentication
+            User currentUser = (User) authentication.getPrincipal();
+            return userService.updateUser(currentUser.getId(), userId, userRequestDTO)
                     .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
                     .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
         } catch (RuntimeException e) {
@@ -87,10 +92,13 @@ public class UserController {
     @DeleteMapping("/{userId}")
     @Operation(summary = "Delete a user", description = "Permanently deletes a user by their ID")
     public ResponseEntity<Void> deleteUser(
-            @Parameter(description = "ID of user to delete") @PathVariable @NonNull Long userId) {
+            @Parameter(description = "ID of user to delete") @PathVariable @NonNull Long userId,
+            Authentication authentication) {
         
         try {
-            boolean deleted = userService.deleteUser(1L, userId); // Using default user ID
+            // Get current user ID from authentication
+            User currentUser = (User) authentication.getPrincipal();
+            boolean deleted = userService.deleteUser(currentUser.getId(), userId);
             return deleted ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
                           : new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (RuntimeException e) {
@@ -104,9 +112,8 @@ public class UserController {
             @Parameter(description = "ID of user") @PathVariable @NonNull Long userId,
             @Parameter(description = "ID of role to assign") @PathVariable @NonNull Long roleId) {
         
-        boolean added = userService.addRoleToUser(userId, roleId);
-        return added ? new ResponseEntity<>(HttpStatus.OK)
-                     : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        userService.assignRoleToUser(userId, roleId);
+        return ResponseEntity.noContent().build();
     }
     
     @DeleteMapping("/{userId}/roles/{roleId}")
@@ -115,8 +122,7 @@ public class UserController {
             @Parameter(description = "ID of user") @PathVariable @NonNull Long userId,
             @Parameter(description = "ID of role to remove") @PathVariable @NonNull Long roleId) {
         
-        boolean removed = userService.removeRoleFromUser(userId, roleId);
-        return removed ? new ResponseEntity<>(HttpStatus.OK)
-                       : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        userService.removeRoleFromUser(userId, roleId);
+        return ResponseEntity.noContent().build();
     }
 }

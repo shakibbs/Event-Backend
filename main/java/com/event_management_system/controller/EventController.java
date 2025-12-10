@@ -1,14 +1,15 @@
 package com.event_management_system.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.event_management_system.dto.EventRequestDTO;
 import com.event_management_system.dto.EventResponseDTO;
+import com.event_management_system.entity.User;
+import com.event_management_system.repository.UserRepository;
 import com.event_management_system.service.EventService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +42,9 @@ public class EventController {
 
     @Autowired
     private EventService eventService;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping
     @Operation(summary = "Create a new event", description = "Creates a new event with provided details. The start time must be before end time.")
@@ -50,14 +56,19 @@ public class EventController {
     })
     public ResponseEntity<EventResponseDTO> createEvent(
             @Parameter(description = "Event details to be created", required = true)
-            @Valid @RequestBody @NonNull EventRequestDTO eventRequestDTO) {
+            @Valid @RequestBody @NonNull EventRequestDTO eventRequestDTO,
+            Authentication authentication) {
         
-        EventResponseDTO savedEvent = eventService.createEvent(eventRequestDTO, 1L); // Using default user ID
+        // Get current user ID from authentication
+        String email = authentication.getName();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        EventResponseDTO savedEvent = eventService.createEvent(eventRequestDTO, currentUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(savedEvent);
     }
 
     @GetMapping
-    @Operation(summary = "Get all events", description = "Retrieves a paginated list of all events in system")
+    @Operation(summary = "Get all events", description = "Retrieves a paginated list of all events visible to the current user based on their role and permissions")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Events retrieved successfully",
                     content = @Content(schema = @Schema(implementation = Page.class))),
@@ -67,7 +78,8 @@ public class EventController {
             @Parameter(description = "Page number (0-based)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Number of items per page", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            Authentication authentication) {
         
         // Validate pagination parameters
         if (page < 0) {
@@ -77,10 +89,35 @@ public class EventController {
             throw new IllegalArgumentException("Page size must be between 1 and 100");
         }
         
-        Pageable pageable = PageRequest.of(page, size);
-        Page<EventResponseDTO> events = eventService.getAllEvents(pageable);
-        return ResponseEntity.ok(events);
+        String email = authentication.getName();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        // Get all events the user can view
+        List<EventResponseDTO> allVisibleEvents = eventService.getEventsForUser(currentUser.getId());
+        
+        // Apply pagination
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, allVisibleEvents.size());
+        
+        if (startIndex >= allVisibleEvents.size()) {
+            // Return empty page if start index is beyond the list
+            Page<EventResponseDTO> emptyPage = new org.springframework.data.domain.PageImpl<>(
+                    java.util.Collections.emptyList(),
+                    PageRequest.of(page, size),
+                    allVisibleEvents.size());
+            return ResponseEntity.ok(emptyPage);
+        }
+        
+        List<EventResponseDTO> paginatedEvents = allVisibleEvents.subList(startIndex, endIndex);
+        Page<EventResponseDTO> eventPage = new org.springframework.data.domain.PageImpl<>(
+                paginatedEvents,
+                PageRequest.of(page, size),
+                allVisibleEvents.size());
+        
+        return ResponseEntity.ok(eventPage);
     }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "Get event by ID", description = "Retrieves a specific event by its unique identifier")
@@ -92,9 +129,13 @@ public class EventController {
     })
     public ResponseEntity<EventResponseDTO> getEventById(
             @Parameter(description = "Unique identifier of event", required = true, example = "1")
-            @PathVariable @NonNull Long id) {
+            @PathVariable @NonNull Long id,
+            Authentication authentication) {
         
-        Optional<EventResponseDTO> event = eventService.getEventById(id, 1L); // Using default user ID
+        String email = authentication.getName();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        Optional<EventResponseDTO> event = eventService.getEventById(id, currentUser.getId());
         if (event.isPresent()) {
             return ResponseEntity.ok(event.get());
         } else {
@@ -115,9 +156,13 @@ public class EventController {
             @Parameter(description = "Unique identifier of event to update", required = true, example = "1")
             @PathVariable @NonNull Long id,
             @Parameter(description = "Updated event details", required = true)
-            @Valid @RequestBody @NonNull EventRequestDTO eventDetails) {
+            @Valid @RequestBody @NonNull EventRequestDTO eventDetails,
+            Authentication authentication) {
         
-        Optional<EventResponseDTO> eventOptional = eventService.updateEvent(id, eventDetails, 1L); // Using default user ID
+        String email = authentication.getName();
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        Optional<EventResponseDTO> eventOptional = eventService.updateEvent(id, eventDetails, currentUser.getId());
         if (eventOptional.isPresent()) {
             return ResponseEntity.ok(eventOptional.get());
         } else {
@@ -134,10 +179,14 @@ public class EventController {
     })
     public ResponseEntity<Void> deleteEvent(
             @Parameter(description = "Unique identifier of event to delete", required = true, example = "1")
-            @PathVariable @NonNull Long id) {
+            @PathVariable @NonNull Long id,
+            Authentication authentication) {
         
         try {
-            boolean deleted = eventService.deleteEvent(id, 1L); // Using default user ID
+            String email = authentication.getName();
+            User currentUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            boolean deleted = eventService.deleteEvent(id, currentUser.getId());
             if (deleted) {
                 return ResponseEntity.ok().build();
             } else {

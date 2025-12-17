@@ -26,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 public class EventService {
 
     @Autowired
+    private ApplicationLoggerService logger;
+    
+    @Autowired
     private EventRepository eventRepository;
     
     @Autowired
@@ -42,22 +45,29 @@ public class EventService {
     
     @Transactional
     public EventResponseDTO createEvent(@NonNull EventRequestDTO eventRequestDTO, @NonNull Long currentUserId) {
-        // Check permission before creating event
+        // TRACE: Entry point
+        logger.trace("[EventService] TRACE - createEvent() called with userId=" + currentUserId + ", title=" + eventRequestDTO.getTitle());
+        
+        // DEBUG: Check permission before creating event
+        logger.debug("[EventService] DEBUG - createEvent() - Checking permissions for user " + currentUserId);
         boolean hasManageOwn = hasPermission(currentUserId, "event.manage.own");
         boolean hasManageAll = hasPermission(currentUserId, "event.manage.all");
         
-        log.info("User {} - hasPermission('event.manage.own'): {}", currentUserId, hasManageOwn);
-        log.info("User {} - hasPermission('event.manage.all'): {}", currentUserId, hasManageAll);
+        logger.debug("[EventService] DEBUG - createEvent() - hasPermission('event.manage.own'): " + hasManageOwn);
+        logger.debug("[EventService] DEBUG - createEvent() - hasPermission('event.manage.all'): " + hasManageAll);
         
         if (!hasManageOwn && !hasManageAll) {
+            logger.warn("[EventService] WARN - User " + currentUserId + " not authorized to create events");
             throw new RuntimeException("You don't have permission to create events");
         }
         
         if (!eventRequestDTO.isDateRangeValid()) {
+            logger.warn("[EventService] WARN - Invalid date range: end time must be after start time");
             throw new IllegalArgumentException("End time must be after start time");
         }
         
         if (!eventRequestDTO.areDatesInFuture()) {
+            logger.warn("[EventService] WARN - Invalid dates: start and end times must be in the future");
             throw new IllegalArgumentException("Start time and end time must be in the future");
         }
         
@@ -66,10 +76,14 @@ public class EventService {
         // Set organizer
         userRepository.findById(currentUserId).ifPresent(user -> {
             event.setOrganizer(user);
+            logger.debug("[EventService] DEBUG - createEvent() - Set organizer to user " + user.getId());
         });
         
         event.recordCreation("system");
         Event savedEvent = eventRepository.save(event);
+        
+        // INFO: Event created successfully
+        logger.info("[EventService] INFO - Event created successfully: eventId=" + savedEvent.getId() + ", title=" + savedEvent.getTitle() + ", userId=" + currentUserId);
         
         // Record activity: Event Created
         userRepository.findById(currentUserId).ifPresent(user -> {
@@ -83,7 +97,7 @@ public class EventService {
                     java.util.UUID.randomUUID().toString()  // Session ID
                 );
             } catch (Exception e) {
-                log.error("Failed to record event creation activity: {}", e.getMessage());
+                logger.error("[EventService] ERROR - Failed to record event creation activity: " + e.getMessage());
             }
         });
         
@@ -102,25 +116,36 @@ public class EventService {
 
     @Transactional
     public Optional<EventResponseDTO> updateEvent(@NonNull Long id, @NonNull EventRequestDTO eventRequestDTO, @NonNull Long currentUserId) {
-        // Check if user can manage this event
+        // TRACE: Entry point
+        logger.trace("[EventService] TRACE - updateEvent() called with eventId=" + id + ", userId=" + currentUserId);
+        
+        // DEBUG: Check if user can manage this event
+        logger.debug("[EventService] DEBUG - updateEvent() - Checking manage permission for event " + id);
         return eventRepository.findById(id).map(existingEvent -> {
             if (!canManageEvent(existingEvent, currentUserId)) {
+                logger.warn("[EventService] WARN - User " + currentUserId + " not authorized to update event " + id);
                 throw new RuntimeException("You don't have permission to update this event");
             }
             
             if (!eventRequestDTO.isDateRangeValid()) {
+                logger.warn("[EventService] WARN - Invalid date range in update: end time must be after start time");
                 throw new IllegalArgumentException("End time must be after start time");
             }
             
             if (!eventRequestDTO.areDatesInFuture()) {
+                logger.warn("[EventService] WARN - Invalid future dates in update: start and end times must be in the future");
                 throw new IllegalArgumentException("Start time and end time must be in the future");
             }
             
+            logger.debug("[EventService] DEBUG - updateEvent() - Updating event entity with new data");
             eventMapper.updateEntity(eventRequestDTO, existingEvent);
            
             // Update audit fields
             existingEvent.recordUpdate("system");
             Event updatedEvent = eventRepository.save(existingEvent);
+            
+            // INFO: Event updated successfully
+            logger.info("[EventService] INFO - Event updated successfully: eventId=" + updatedEvent.getId() + ", title=" + updatedEvent.getTitle() + ", userId=" + currentUserId);
             
             // Record activity: Event Updated
             userRepository.findById(currentUserId).ifPresent(user -> {
@@ -134,7 +159,7 @@ public class EventService {
                         java.util.UUID.randomUUID().toString()
                     );
                 } catch (Exception e) {
-                    log.error("Failed to record event update activity: {}", e.getMessage());
+                    logger.error("[EventService] ERROR - Failed to record event update activity: " + e.getMessage());
                 }
             });
             
@@ -144,14 +169,24 @@ public class EventService {
 
     @Transactional
     public boolean deleteEvent(@NonNull Long id, @NonNull Long currentUserId) {
+        // TRACE: Entry point
+        logger.trace("[EventService] TRACE - deleteEvent() called with eventId=" + id + ", userId=" + currentUserId);
+        
         return eventRepository.findById(id).map(event -> {
+            // DEBUG: Check if user can manage this event
+            logger.debug("[EventService] DEBUG - deleteEvent() - Checking manage permission for event " + id);
             if (!canManageEvent(event, currentUserId)) {
+                logger.warn("[EventService] WARN - User " + currentUserId + " not authorized to delete event " + id);
                 throw new RuntimeException("You don't have permission to delete this event");
             }
             
             String eventTitle = event.getTitle();  // Save title before deletion
+            logger.debug("[EventService] DEBUG - deleteEvent() - Marking event as deleted: " + eventTitle);
             event.markDeleted();
             eventRepository.save(event);
+            
+            // INFO: Event deleted successfully
+            logger.info("[EventService] INFO - Event deleted successfully: eventId=" + event.getId() + ", title=" + eventTitle + ", userId=" + currentUserId);
             
             // Record activity: Event Deleted
             userRepository.findById(currentUserId).ifPresent(user -> {
@@ -165,7 +200,7 @@ public class EventService {
                         java.util.UUID.randomUUID().toString()
                     );
                 } catch (Exception e) {
-                    log.error("Failed to record event deletion activity: {}", e.getMessage());
+                    logger.error("[EventService] ERROR - Failed to record event deletion activity: " + e.getMessage());
                 }
             });
             

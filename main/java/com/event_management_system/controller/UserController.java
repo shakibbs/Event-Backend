@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.event_management_system.dto.UserRequestDTO;
 import com.event_management_system.dto.UserResponseDTO;
 import com.event_management_system.entity.User;
+import com.event_management_system.service.ApplicationLoggerService;
 import com.event_management_system.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,14 +34,25 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private ApplicationLoggerService logger;
 
     @PostMapping
     @Operation(summary = "Create a new user", description = "Creates a new user with provided details")
     public ResponseEntity<UserResponseDTO> createUser(
             @Valid @RequestBody @NonNull UserRequestDTO userRequestDTO) {
         
-        UserResponseDTO createdUser = userService.createUser(userRequestDTO);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        try {
+            logger.traceWithContext("UserController", "createUser() called with email={}, fullName={}", userRequestDTO.getEmail(), userRequestDTO.getFullName());
+            logger.debugWithContext("UserController", "POST /api/users - Creating user: email={}, fullName={}", userRequestDTO.getEmail(), userRequestDTO.getFullName());
+            UserResponseDTO createdUser = userService.createUser(userRequestDTO);
+            logger.infoWithContext("UserController", "User created successfully: userId={}, email={}, fullName={}", createdUser.getId(), createdUser.getEmail(), createdUser.getFullName());
+            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+        } catch (Exception e) {
+            logger.errorWithContext("UserController", "Failed to create user: email={}", e);
+            throw e;
+        }
     }
 
     @GetMapping("/{userId}")
@@ -79,13 +91,25 @@ public class UserController {
             Authentication authentication) {
         
         try {
-            // Get current user ID from authentication
+            logger.traceWithContext("UserController", "updateUser() called with userId={}, email={}", userId, userRequestDTO.getEmail());
+            logger.debugWithContext("UserController", "PUT /api/users/{} - Updating user: email={}", userId, userRequestDTO.getEmail());
             User currentUser = (User) authentication.getPrincipal();
-            return userService.updateUser(currentUser.getId(), userId, userRequestDTO)
-                    .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
-                    .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+            logger.debugWithContext("UserController", "User authenticated: userId={}", currentUser.getId());
+            var result = userService.updateUser(currentUser.getId(), userId, userRequestDTO);
+           
+            if (result.isPresent()) {
+                logger.infoWithContext("UserController", "User updated successfully: userId={}, email={}", userId, result.get().getEmail());
+                return new ResponseEntity<>(result.get(), HttpStatus.OK);
+            } else {
+                logger.warnWithContext("UserController", "User not found for update: userId={}, requestedBy={}", userId, currentUser.getId());
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
         } catch (RuntimeException e) {
+            logger.warnWithContext("UserController", "Access denied for user update: userId={}, error={}", userId, e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            logger.errorWithContext("UserController", "Failed to update user: userId={}", e);
+            throw e;
         }
     }
 
@@ -96,13 +120,25 @@ public class UserController {
             Authentication authentication) {
         
         try {
-            // Get current user ID from authentication
+            logger.traceWithContext("UserController", "deleteUser() called with userId={}, timestamp={}", userId, System.currentTimeMillis());
+            logger.debugWithContext("UserController", "DELETE /api/users/{} - Deleting user", userId);
             User currentUser = (User) authentication.getPrincipal();
+            logger.debugWithContext("UserController", "User authenticated: userId={}", currentUser.getId());
             boolean deleted = userService.deleteUser(currentUser.getId(), userId);
-            return deleted ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
-                          : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+           
+            if (deleted) {
+                logger.infoWithContext("UserController", "User deleted successfully: userId={}, deletedBy={}", userId, currentUser.getId());
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            } else {
+                logger.warnWithContext("UserController", "User not found for deletion: userId={}, deletedBy={}", userId, currentUser.getId());
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
         } catch (RuntimeException e) {
+            logger.warnWithContext("UserController", "Access denied for user deletion: userId={}, error={}", userId, e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        } catch (Exception e) {
+            logger.errorWithContext("UserController", "Failed to delete user: userId={}", e);
+            throw e;
         }
     }
     
@@ -112,8 +148,16 @@ public class UserController {
             @Parameter(description = "ID of user") @PathVariable @NonNull Long userId,
             @Parameter(description = "ID of role to assign") @PathVariable @NonNull Long roleId) {
         
-        userService.assignRoleToUser(userId, roleId);
-        return ResponseEntity.noContent().build();
+        try {
+            logger.traceWithContext("UserController", "addRoleToUser() called with userId={}, roleId={}, timestamp={}", userId, roleId, System.currentTimeMillis());
+            logger.debugWithContext("UserController", "POST /api/users/{}/roles/{} - Adding role to user", userId, roleId);
+            userService.assignRoleToUser(userId, roleId);
+            logger.infoWithContext("UserController", "Role added to user successfully: userId={}, roleId={}", userId, roleId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.errorWithContext("UserController", "Failed to add role to user: userId={}, roleId={}", e);
+            throw e;
+        }
     }
     
     @DeleteMapping("/{userId}/roles/{roleId}")
@@ -122,7 +166,15 @@ public class UserController {
             @Parameter(description = "ID of user") @PathVariable @NonNull Long userId,
             @Parameter(description = "ID of role to remove") @PathVariable @NonNull Long roleId) {
         
-        userService.removeRoleFromUser(userId, roleId);
-        return ResponseEntity.noContent().build();
+        try {
+            logger.traceWithContext("UserController", "removeRoleFromUser() called with userId={}, roleId={}, timestamp={}", userId, roleId, System.currentTimeMillis());
+            logger.debugWithContext("UserController", "DELETE /api/users/{}/roles/{} - Removing role from user", userId, roleId);
+            userService.removeRoleFromUser(userId, roleId);
+            logger.infoWithContext("UserController", "Role removed from user successfully: userId={}, roleId={}", userId, roleId);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            logger.errorWithContext("UserController", "Failed to remove role from user: userId={}, roleId={}", e);
+            throw e;
+        }
     }
 }

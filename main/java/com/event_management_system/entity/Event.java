@@ -28,10 +28,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Event extends BaseEntity {
 
-    /**
-     * Event Visibility Levels
-     * Controls who can view/access the event
-     */
     public enum Visibility {
         PUBLIC("Public"),
         PRIVATE("Private"),

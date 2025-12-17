@@ -100,6 +100,9 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthService {
 
     @Autowired
+    private ApplicationLoggerService logger;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -126,92 +129,70 @@ public class AuthService {
     @Autowired
     private UserPasswordHistoryService passwordHistoryService;
 
-    /**
-     * Authenticate user with email and password (with request context for history tracking)
-     * 
-     * IMPLEMENTS DIAGRAM 3: Complete Login Flow + History Tracking
-     * 
-     * WHEN CALLED:
-     * - User clicks "Login" button
-     * - Client sends email & password to POST /api/auth/login
-     * - AuthController calls authService.authenticate(loginRequest, request)
-     * 
-     * PROCESS:
-     * 1. Validate input (email & password not empty)
-     * 2. Find user by email in database
-     * 3. Compare password with BCrypt hash
-     * 4. Generate access token with UUID
-     * 5. Generate refresh token with UUID
-     * 6. Cache both token UUIDs with expiration
-     * 7. Record login history with IP, device info
-     * 8. Record activity history
-     * 9. Build and return AuthResponseDTO
-     * 
-     * @param loginRequest Contains email and password from client
-     * @param request HttpServletRequest for extracting IP and device info
-     * @return AuthResponseDTO with tokens and user info
-     * @throws RuntimeException if credentials invalid
-     */
+ 
     public AuthResponseDTO authenticate(LoginRequestDTO loginRequest, jakarta.servlet.http.HttpServletRequest request) {
-        log.info("Attempting authentication for email: {}", loginRequest.getEmail());
+        // TRACE: Entry point
+        logger.trace("[AuthService] TRACE - authenticate() called with email=" + loginRequest.getEmail());
 
-        // STEP 1: Validate input (basic validation, @Valid does most of this)
+        // DEBUG: Validate input
+        logger.debug("[AuthService] DEBUG - authenticate() - Validating input parameters");
         if (loginRequest.getEmail() == null || loginRequest.getPassword() == null) {
-            log.warn("Authentication attempt with null email or password");
+            logger.warn("[AuthService] WARN - Authentication attempt with null email or password");
             throw new RuntimeException("Email and password are required");
         }
 
-        // STEP 2: Fetch user by email (Diagram 3, Step 2)
-        log.debug("Searching for user with email: {}", loginRequest.getEmail());
+        // DEBUG: Search for user by email
+        logger.debug("[AuthService] DEBUG - authenticate() - Searching for user with email: " + loginRequest.getEmail());
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> {
-                    log.warn("User not found with email: {}", loginRequest.getEmail());
+                    logger.warn("[AuthService] WARN - User not found with email: " + loginRequest.getEmail());
                     // Don't reveal if email exists (security)
                     return new RuntimeException("Invalid credentials");
                 });
 
-        log.debug("User found: {}", user.getId());
+        logger.debug("[AuthService] DEBUG - authenticate() - User found: userId=" + user.getId());
 
-        // STEP 3: Compare password (Diagram 3, Step 4)
-        log.debug("Validating password for user: {}", user.getId());
-        log.debug("Input password: {}", loginRequest.getPassword());
-        log.debug("Stored hash: {}", user.getPassword());
+        // DEBUG: Validate password
+        logger.debug("[AuthService] DEBUG - authenticate() - Validating password for userId=" + user.getId());
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-            log.warn("Invalid password for user: {}", user.getId());
-            log.warn("Password match failed - input: '{}', hash: '{}'", loginRequest.getPassword(), user.getPassword().substring(0, 20));
+            logger.warn("[AuthService] WARN - Invalid password for user: " + user.getId());
             // Don't reveal if password is wrong (security)
             throw new RuntimeException("Invalid credentials");
         }
 
-        log.info("Password validated successfully for user: {}", user.getId());
+        logger.info("[AuthService] INFO - Password validated successfully for userId=" + user.getId());
 
-        // STEP 4: Generate access token (Diagram 3, Step 6)
+        // DEBUG: Generate access token
+        logger.debug("[AuthService] DEBUG - authenticate() - Generating access token");
         String accessToken = jwtService.generateAccessToken(user.getId());
-        log.debug("Access token generated for user: {}", user.getId());
+        logger.debug("[AuthService] DEBUG - authenticate() - Access token generated for userId=" + user.getId());
 
-        // STEP 5: Generate refresh token (Diagram 3, Step 6)
+        // DEBUG: Generate refresh token
+        logger.debug("[AuthService] DEBUG - authenticate() - Generating refresh token");
         String refreshToken = jwtService.generateRefreshToken(user.getId());
-        log.debug("Refresh token generated for user: {}", user.getId());
+        logger.debug("[AuthService] DEBUG - authenticate() - Refresh token generated for userId=" + user.getId());
 
-        // STEP 6: Extract UUIDs from tokens and cache them (Diagram 3, Step 7-9)
+        // DEBUG: Extract and cache token UUIDs
         String accessTokenUuid = jwtService.getTokenUuidFromToken(accessToken);
         String refreshTokenUuid = jwtService.getTokenUuidFromToken(refreshToken);
 
-        log.debug("Access Token UUID: {}, Refresh Token UUID: {}", accessTokenUuid, refreshTokenUuid);
+        logger.debug("[AuthService] DEBUG - authenticate() - Token UUIDs extracted - Access UUID=" + accessTokenUuid + ", Refresh UUID=" + refreshTokenUuid);
 
-        // STEP 7: Cache tokens with their UUIDs
+        // Cache tokens with their UUIDs
         tokenCacheService.cacheAccessToken(accessTokenUuid, user.getId());
         tokenCacheService.cacheRefreshToken(refreshTokenUuid, user.getId());
 
-        log.info("Tokens cached for user: {}", user.getId());
+        logger.info("[AuthService] INFO - Tokens cached successfully for userId=" + user.getId());
         
-        // STEP 7.5: Record login history and activity
+        // Record login history and activity
         if (request != null) {
             try {
                 // Extract IP and device info
                 String ipAddress = requestInfoUtil.getClientIpAddress(request);
                 String deviceInfo = requestInfoUtil.getCompleteDeviceInfo(request);
                 String deviceId = requestInfoUtil.generateDeviceId(request);
+                
+                logger.debug("[AuthService] DEBUG - authenticate() - Recording login history for userId=" + user.getId());
                 
                 // Record login in UserLoginLogoutHistory
                 loginLogoutHistoryService.recordLogin(
@@ -232,14 +213,14 @@ public class AuthService {
                     accessTokenUuid  // Session ID
                 );
                 
-                log.info("Login history recorded for user: {}", user.getId());
+                logger.debug("[AuthService] DEBUG - authenticate() - Login history recorded for userId=" + user.getId());
             } catch (Exception e) {
                 // Don't fail login if history recording fails
-                log.error("Failed to record login history: {}", e.getMessage());
+                logger.error("[AuthService] ERROR - Failed to record login history: " + e.getMessage());
             }
         }
 
-        // STEP 8: Build response DTO
+        // Build response DTO
         var userResponseDTO = userMapper.toUserResponseDTO(user);
 
         AuthResponseDTO authResponseDTO = new AuthResponseDTO();
@@ -249,7 +230,7 @@ public class AuthService {
         authResponseDTO.setExpiresIn(45 * 60L);  // 45 minutes in seconds
         authResponseDTO.setUser(userResponseDTO);
 
-        log.info("Authentication successful for user: {} (email: {})", user.getId(), user.getEmail());
+        logger.info("[AuthService] INFO - Authentication successful for userId=" + user.getId() + ", email=" + user.getEmail());
 
         return authResponseDTO;
     }

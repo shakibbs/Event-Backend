@@ -35,7 +35,6 @@ public class EventRequestDTO {
     private Event.Visibility visibility = Event.Visibility.PUBLIC;
     
     public boolean isDateRangeValid() {
-        // Simple validation - just check if end time is after start time in string format
         if (startTime == null || endTime == null) return false;
         return endTime.compareTo(startTime) > 0;
     }

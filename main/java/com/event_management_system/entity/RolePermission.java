@@ -56,23 +56,16 @@ public class RolePermission {
     @Column(nullable = false, name = "deleted")
     private Boolean deleted = false;
 
-    /**
-     * Constructor with role and permission (commonly used)
-     */
     public RolePermission(Role role, Permission permission) {
         this.role = role;
         this.permission = permission;
         this.id = new RolePermissionId(role.getId(), permission.getId());
-        // Set creation fields directly instead of calling overridable method
         this.createdBy = "system";
         this.status = BaseEntity.Status.ACTIVE;
         this.deleted = false;
         this.createdAt = LocalDateTime.now();
     }
 
-    /**
-     * Record creation info
-     */
     public void recordCreation(String user) {
         this.createdBy = user;
         this.status = BaseEntity.Status.ACTIVE;
@@ -80,9 +73,6 @@ public class RolePermission {
         this.createdAt = LocalDateTime.now();
     }
 
-    /**
-     * Record update info
-     */
     public void recordUpdate(String user) {
         this.updatedBy = user;
         this.updatedAt = LocalDateTime.now();
@@ -101,9 +91,6 @@ public class RolePermission {
         return Objects.hash(id);
     }
 
-    /**
-     * Embedded ID class for composite primary key
-     */
     @Embeddable
     @Data
     @NoArgsConstructor

@@ -1,7 +1,9 @@
 package com.event_management_system.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,9 @@ import jakarta.annotation.PostConstruct;
 public class RoleService {
 
     @Autowired
+    private ApplicationLoggerService logger;
+
+    @Autowired
     private RoleRepository roleRepository;
     
     @Autowired
@@ -38,21 +43,31 @@ public class RoleService {
 
     @Transactional
     public RoleResponseDTO createRole(RoleRequestDTO roleRequestDTO) {
+        // TRACE: Entry point
+        logger.trace("[RoleService] TRACE - createRole() called with name=" + roleRequestDTO.getName());
+        
+        // DEBUG: Creating role entity
+        logger.debug("[RoleService] DEBUG - createRole() - Creating role entity from DTO");
         Role role = roleMapper.toEntity(roleRequestDTO);
         role.recordCreation("system");
         Role savedRole = roleRepository.save(role);
         
-        // Assign permissions if provided
+        // DEBUG: Assigning permissions if provided
         if (roleRequestDTO.getPermissionIds() != null && !roleRequestDTO.getPermissionIds().isEmpty()) {
+            logger.debug("[RoleService] DEBUG - createRole() - Assigning " + roleRequestDTO.getPermissionIds().size() + " permissions to role");
             for (Long permissionId : roleRequestDTO.getPermissionIds()) {
                 if (permissionId != null) {
                     permissionRepository.findById(permissionId).ifPresent(permission -> {
                         RolePermission rolePermission = new RolePermission(savedRole, permission);
                         rolePermissionRepository.save(rolePermission);
+                        logger.debug("[RoleService] DEBUG - createRole() - Assigned permission: " + permission.getName());
                     });
                 }
             }
         }
+        
+        // INFO: Role created successfully
+        logger.info("[RoleService] INFO - Role created successfully: roleId=" + savedRole.getId() + ", name=" + savedRole.getName());
         
         return roleMapper.toDto(savedRole);
     }
@@ -77,38 +92,76 @@ public class RoleService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public Set<Permission> getPermissionsForRole(@NonNull Long roleId) {
+        return roleRepository.findById(roleId)
+                .map(role -> {
+                    Set<Permission> permissions = new HashSet<>();
+                    if (role.getRolePermissions() != null) {
+                        for (RolePermission rp : role.getRolePermissions()) {
+                            if (rp.getPermission() != null) {
+                                permissions.add(rp.getPermission());
+                            }
+                        }
+                    }
+                    return permissions;
+                })
+                .orElse(new HashSet<>()); // Return empty set if role not found
+    }
+
     @Transactional
     public Optional<RoleResponseDTO> updateRole(@NonNull Long id, @NonNull RoleRequestDTO roleRequestDTO) {
+        // TRACE: Entry point
+        logger.trace("[RoleService] TRACE - updateRole() called with roleId=" + id + ", name=" + roleRequestDTO.getName());
+        
         return roleRepository.findById(id).map(existingRole -> {
+            // DEBUG: Updating role entity
+            logger.debug("[RoleService] DEBUG - updateRole() - Updating role entity");
             roleMapper.updateEntity(roleRequestDTO, existingRole);
             existingRole.recordUpdate("system");
             
-            // Update permissions if provided
+            // DEBUG: Update permissions if provided
             if (roleRequestDTO.getPermissionIds() != null) {
+                logger.debug("[RoleService] DEBUG - updateRole() - Removing existing permissions for roleId=" + id);
                 // Remove all existing permissions
                 rolePermissionRepository.findByRole(existingRole).forEach(rolePermissionRepository::delete);
                 
-                // Add new permissions
+                logger.debug("[RoleService] DEBUG - updateRole() - Assigning " + roleRequestDTO.getPermissionIds().size() + " new permissions");
                 for (Long permissionId : roleRequestDTO.getPermissionIds()) {
                     if (permissionId != null) {
                         permissionRepository.findById(permissionId).ifPresent(permission -> {
                             RolePermission rolePermission = new RolePermission(existingRole, permission);
                             rolePermissionRepository.save(rolePermission);
+                            logger.debug("[RoleService] DEBUG - updateRole() - Assigned permission: " + permission.getName());
                         });
                     }
                 }
             }
             
             Role updatedRole = roleRepository.save(existingRole);
+            
+            // INFO: Role updated successfully
+            logger.info("[RoleService] INFO - Role updated successfully: roleId=" + updatedRole.getId() + ", name=" + updatedRole.getName());
+            
             return roleMapper.toDto(updatedRole);
         });
     }
 
     @Transactional
     public boolean deleteRole(@NonNull Long id) {
+        // TRACE: Entry point
+        logger.trace("[RoleService] TRACE - deleteRole() called with roleId=" + id);
+        
         return roleRepository.findById(id).map(role -> {
+            // DEBUG: Marking role as deleted
+            logger.debug("[RoleService] DEBUG - deleteRole() - Marking role as deleted");
+            String roleName = role.getName();
             role.markDeleted();
             roleRepository.save(role);
+            
+            // INFO: Role deleted successfully
+            logger.info("[RoleService] INFO - Role deleted successfully: roleId=" + id + ", name=" + roleName);
+            
             return true;
         }).orElse(false);
     }

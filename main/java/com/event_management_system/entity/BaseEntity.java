@@ -48,48 +48,33 @@ public abstract class BaseEntity {
     private Boolean deleted = false;
 
     public enum Status {
-        ACTIVE,     // visible / usable
-        INACTIVE,   // temporarily hidden
-        OFF         // permanently closed / soft-deleted
+        ACTIVE,
+        INACTIVE,
+        OFF
     }
 
-
-    /**
-     * Record creation info
-     */
     public void recordCreation(String user) {
         this.createdBy = user;
         this.status = Status.ACTIVE;
         this.deleted = false;
     }
 
-    /**
-     * Record update info
-     */
     public void recordUpdate(String user) {
         this.updatedBy = user;
     }
 
-    /**
-     * Soft-delete the entity
-     */
     public void markDeleted() {
         this.status = Status.OFF;
         this.deleted = true;
     }
 
-    /**
-     * Temporarily hide the entity
-     */
     public void deactivate() {
         if (!Boolean.TRUE.equals(this.deleted)) {
             this.status = Status.INACTIVE;
         }
     }
 
-
-
-        public void activate() {
+    public void activate() {
         this.status = Status.ACTIVE;
         this.deleted = false;
     }
@@ -111,12 +96,10 @@ public abstract class BaseEntity {
         return Boolean.TRUE.equals(this.deleted);
     }
 
-       public static boolean isDateRangeValid(LocalDateTime start, LocalDateTime end) {
-    // Both dates must be provided and end must be after start
-    return start != null && end != null && end.isAfter(start);
+    public static boolean isDateRangeValid(LocalDateTime start, LocalDateTime end) {
+        return start != null && end != null && end.isAfter(start);
     }
 
-    // ====== Convenience copy method ======
     public void copyAuditFrom(BaseEntity other) {
         if (other == null) return;
         this.createdAt = other.createdAt;

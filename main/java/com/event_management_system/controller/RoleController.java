@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.event_management_system.dto.RoleRequestDTO;
 import com.event_management_system.dto.RoleResponseDTO;
+import com.event_management_system.service.ApplicationLoggerService;
 import com.event_management_system.service.RoleService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,14 +32,25 @@ public class RoleController {
 
     @Autowired
     private RoleService roleService;
+    
+    @Autowired
+    private ApplicationLoggerService logger;
 
     @PostMapping
     @Operation(summary = "Create a new role", description = "Creates a new role with provided details")
     public ResponseEntity<RoleResponseDTO> createRole(
             @Valid @RequestBody @NonNull RoleRequestDTO roleRequestDTO) {
         
-        RoleResponseDTO createdRole = roleService.createRole(roleRequestDTO);
-        return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
+        try {
+            logger.traceWithContext("RoleController", "createRole() called with name={}, timestamp={}", roleRequestDTO.getName(), System.currentTimeMillis());
+            logger.debugWithContext("RoleController", "POST /api/roles - Creating role: name={}", roleRequestDTO.getName());
+            RoleResponseDTO createdRole = roleService.createRole(roleRequestDTO);
+            logger.infoWithContext("RoleController", "Role created successfully: roleId={}, name={}", createdRole.getId(), createdRole.getName());
+            return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
+        } catch (Exception e) {
+            logger.errorWithContext("RoleController", "Failed to create role: name={}", e);
+            throw e;
+        }
     }
 
     @GetMapping("/{id}")
@@ -64,9 +76,22 @@ public class RoleController {
             @Parameter(description = "ID of role to update") @PathVariable @NonNull Long id,
             @Valid @RequestBody @NonNull RoleRequestDTO roleRequestDTO) {
         
-        return roleService.updateRole(id, roleRequestDTO)
-                .map(role -> new ResponseEntity<>(role, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        try {
+            logger.traceWithContext("RoleController", "updateRole() called with roleId={}, name={}", id, roleRequestDTO.getName());
+            logger.debugWithContext("RoleController", "PUT /api/roles/{} - Updating role: name={}", id, roleRequestDTO.getName());
+            var result = roleService.updateRole(id, roleRequestDTO);
+            
+            if (result.isPresent()) {
+                logger.infoWithContext("RoleController", "Role updated successfully: roleId={}, name={}", id, result.get().getName());
+                return new ResponseEntity<>(result.get(), HttpStatus.OK);
+            } else {
+                logger.warnWithContext("RoleController", "Role not found for update: roleId={}", id);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            logger.errorWithContext("RoleController", "Failed to update role: roleId={}", e);
+            throw e;
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -74,9 +99,22 @@ public class RoleController {
     public ResponseEntity<Void> deleteRole(
             @Parameter(description = "ID of role to delete") @PathVariable @NonNull Long id) {
         
-        boolean deleted = roleService.deleteRole(id);
-        return deleted ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
-                      : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        try {
+            logger.traceWithContext("RoleController", "deleteRole() called with roleId={}, timestamp={}", id, System.currentTimeMillis());
+            logger.debugWithContext("RoleController", "DELETE /api/roles/{} - Deleting role", id);
+            boolean deleted = roleService.deleteRole(id);
+            
+            if (deleted) {
+                logger.infoWithContext("RoleController", "Role deleted successfully: roleId={}", id);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            } else {
+                logger.warnWithContext("RoleController", "Role not found for deletion: roleId={}", id);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            logger.errorWithContext("RoleController", "Failed to delete role: roleId={}", e);
+            throw e;
+        }
     }
     
     @PostMapping("/{roleId}/permissions/{permissionId}")
@@ -85,9 +123,22 @@ public class RoleController {
             @Parameter(description = "ID of role") @PathVariable @NonNull Long roleId,
             @Parameter(description = "ID of permission to assign") @PathVariable @NonNull Long permissionId) {
         
-        boolean added = roleService.addPermissionToRole(roleId, permissionId);
-        return added ? new ResponseEntity<>(HttpStatus.OK)
-                     : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        try {
+            logger.traceWithContext("RoleController", "addPermissionToRole() called with roleId={}, permissionId={}, timestamp={}", roleId, permissionId, System.currentTimeMillis());
+            logger.debugWithContext("RoleController", "POST /api/roles/{}/permissions/{} - Adding permission to role", roleId, permissionId);
+            boolean added = roleService.addPermissionToRole(roleId, permissionId);
+            
+            if (added) {
+                logger.infoWithContext("RoleController", "Permission added to role successfully: roleId={}, permissionId={}", roleId, permissionId);
+                return new ResponseEntity<>(HttpStatus.OK);
+            } else {
+                logger.warnWithContext("RoleController", "Role or permission not found: roleId={}, permissionId={}", roleId, permissionId);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            logger.errorWithContext("RoleController", "Failed to add permission to role: roleId={}, permissionId={}", e);
+            throw e;
+        }
     }
     
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
@@ -96,8 +147,21 @@ public class RoleController {
             @Parameter(description = "ID of role") @PathVariable @NonNull Long roleId,
             @Parameter(description = "ID of permission to remove") @PathVariable @NonNull Long permissionId) {
         
-        boolean removed = roleService.removePermissionFromRole(roleId, permissionId);
-        return removed ? new ResponseEntity<>(HttpStatus.OK)
-                       : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        try {
+            logger.traceWithContext("RoleController", "removePermissionFromRole() called with roleId={}, permissionId={}, timestamp={}", roleId, permissionId, System.currentTimeMillis());
+            logger.debugWithContext("RoleController", "DELETE /api/roles/{}/permissions/{} - Removing permission from role", roleId, permissionId);
+            boolean removed = roleService.removePermissionFromRole(roleId, permissionId);
+            
+            if (removed) {
+                logger.infoWithContext("RoleController", "Permission removed from role successfully: roleId={}, permissionId={}", roleId, permissionId);
+                return new ResponseEntity<>(HttpStatus.OK);
+            } else {
+                logger.warnWithContext("RoleController", "Role or permission not found for removal: roleId={}, permissionId={}", roleId, permissionId);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            logger.errorWithContext("RoleController", "Failed to remove permission from role: roleId={}, permissionId={}", e);
+            throw e;
+        }
     }
 }

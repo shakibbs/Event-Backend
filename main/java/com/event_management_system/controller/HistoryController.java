@@ -28,28 +28,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * HistoryController
- * 
- * Provides API endpoints for retrieving user history:
- * - Login/Logout history
- * - Password change history
- * - Activity history
- * 
- * SECURITY:
- * - All endpoints require authentication
- * - SuperAdmin (history.view.all permission): Can view ANY user's history via userId parameter
- * - Admin/Attendee (history.view.own permission): Can ONLY view their own history
- * - Passwords are never exposed in responses
- * 
- * ENDPOINTS:
- * 1. GET /api/history/login - Get login/logout history
- * 2. GET /api/history/login/active - Get active sessions
- * 3. GET /api/history/password - Get password change history
- * 4. GET /api/history/activity - Get all activities
- * 5. GET /api/history/activity/recent - Get recent activities
- * 6. GET /api/history/activity/type/{type} - Get activities by type
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/history")
@@ -68,45 +46,26 @@ public class HistoryController {
     @Autowired
     private com.event_management_system.service.UserService userService;
     
-    /**
-     * Helper method: Get current authenticated user ID
-     *
-     * @return User ID from security context
-     */
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new RuntimeException("User not authenticated");
         }
         
-        // Get user details from authentication principal
         org.springframework.security.core.userdetails.User userDetails =
             (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
         
-        // Extract user ID from username (which contains email) by querying the user service
         return userService.getUserIdByEmail(userDetails.getUsername());
     }
     
-    /**
-     * Helper method: Check if current user can view target user's history
-     * 
-     * Rules:
-     * - SuperAdmin (history.view.all): Can view ANY user's history
-     * - Admin/Attendee (history.view.own): Can ONLY view their OWN history
-     * 
-     * @param targetUserId - The user ID whose history is being requested
-     * @return true if allowed, throws exception if not allowed
-     */
     private boolean canViewUserHistory(Long targetUserId) {
         Long currentUserId = getCurrentUserId();
         Objects.requireNonNull(currentUserId, "Current user ID should not be null");
         
-        // SuperAdmin can view anyone's history
         if (userService.hasPermission(currentUserId, "history.view.all")) {
             return true;
         }
         
-        // Others can only view their own history
         if (!currentUserId.equals(targetUserId)) {
             throw new RuntimeException("You don't have permission to view this user's history");
         }
@@ -114,40 +73,7 @@ public class HistoryController {
         return true;
     }
     
-    // ==================== LOGIN/LOGOUT HISTORY ENDPOINTS ====================
     
-    /**
-     * Get login/logout history for current user or specified user (SuperAdmin only)
-     * 
-     * Usage:
-     * GET /api/history/login - Get own history
-     * GET /api/history/login?userId=5 - SuperAdmin gets user 5's history
-     * 
-     * Query Parameters:
-     * - userId: Optional - Target user ID (SuperAdmin only)
-     * 
-     * Response:
-     * [
-     *   {
-     *     "id": 1,
-     *     "loginTime": "2025-12-09T10:00:00",
-     *     "logoutTime": "2025-12-09T11:00:00",
-     *     "requestIp": "192.168.1.100",
-     *     "deviceInfo": "Chrome 120 on Windows 10 (Desktop)",
-     *     "loginStatus": "SUCCESS",
-     *     "isActiveSession": false
-     *   },
-     *   {
-     *     "id": 2,
-     *     "loginTime": "2025-12-09T12:00:00",
-     *     "logoutTime": null,
-     *     "requestIp": "192.168.1.100",
-     *     "deviceInfo": "Chrome 120 on Windows 10 (Desktop)",
-     *     "loginStatus": "SUCCESS",
-     *     "isActiveSession": true  ← Current session
-     *   }
-     * ]
-     */
     @GetMapping("/login")
     @Operation(
         summary = "Get login/logout history",
@@ -157,11 +83,9 @@ public class HistoryController {
             @Parameter(description = "Target user ID (SuperAdmin only)")
             @RequestParam(required = false) Long userId) {
         try {
-            // If userId not provided, use current user
             Long targetUserId = (userId != null) ? userId : getCurrentUserId();
             Objects.requireNonNull(targetUserId, "Target user ID should not be null");
             
-            // Check permission
             canViewUserHistory(targetUserId);
             
             log.info("Fetching login history for user: {}", targetUserId);
@@ -178,32 +102,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get active sessions for current user
-     * 
-     * Usage:
-     * GET /api/history/login/active
-     * 
-     * Response:
-     * [
-     *   {
-     *     "id": 2,
-     *     "loginTime": "2025-12-09T12:00:00",
-     *     "logoutTime": null,
-     *     "requestIp": "192.168.1.100",
-     *     "deviceInfo": "Chrome 120 on Windows 10 (Desktop)",
-     *     "isActiveSession": true
-     *   },
-     *   {
-     *     "id": 3,
-     *     "loginTime": "2025-12-09T11:30:00",
-     *     "logoutTime": null,
-     *     "requestIp": "203.54.89.20",
-     *     "deviceInfo": "Safari on iPhone (Mobile)",
-     *     "isActiveSession": true
-     *   }
-     * ]
-     */
     @GetMapping("/login/active")
     @Operation(
         summary = "Get active sessions",
@@ -232,16 +130,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get login history within date range
-     * 
-     * Usage:
-     * GET /api/history/login/range?startDate=2025-12-01T00:00:00&endDate=2025-12-09T23:59:59
-     * 
-     * Query Parameters:
-     * - startDate: Start date (ISO format: yyyy-MM-dd'T'HH:mm:ss)
-     * - endDate: End date (ISO format: yyyy-MM-dd'T'HH:mm:ss)
-     */
     @GetMapping("/login/range")
     @Operation(
         summary = "Get login history by date range",
@@ -271,14 +159,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get failed login attempts
-     * 
-     * Usage:
-     * GET /api/history/login/failed
-     * 
-     * Response: List of failed login attempts (security monitoring)
-     */
     @GetMapping("/login/failed")
     @Operation(
         summary = "Get failed login attempts",
@@ -301,35 +181,7 @@ public class HistoryController {
         }
     }
     
-    // ==================== PASSWORD HISTORY ENDPOINTS ====================
     
-    /**
-     * Get password change history for current user
-     * 
-     * Usage:
-     * GET /api/history/password
-     * 
-     * Response:
-     * [
-     *   {
-     *     "id": 1,
-     *     "userId": 5,
-     *     "userFullName": "John Doe",
-     *     "passwordChangedById": 5,
-     *     "passwordChangedByName": "John Doe",  ← Changed by self
-     *     "changeDate": "2025-11-09T10:00:00",
-     *     "createdDate": "2025-11-09T10:00:00"
-     *   },
-     *   {
-     *     "id": 2,
-     *     "passwordChangedById": 1,
-     *     "passwordChangedByName": "Admin User",  ← Changed by admin
-     *     "changeDate": "2025-12-09T14:00:00"
-     *   }
-     * ]
-     * 
-     * Note: Password hashes are NEVER included in response for security
-     */
     @GetMapping("/password")
     @Operation(
         summary = "Get password change history",
@@ -358,15 +210,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get recent password changes
-     * 
-     * Usage:
-     * GET /api/history/password/recent?days=30
-     * 
-     * Query Parameters:
-     * - days: Number of days to look back (default: 30)
-     */
     @GetMapping("/password/recent")
     @Operation(
         summary = "Get recent password changes",
@@ -392,33 +235,8 @@ public class HistoryController {
         }
     }
     
-    // ==================== ACTIVITY HISTORY ENDPOINTS ====================
     
-    /**
-     * Get all activities for current user
-     * 
-     * Usage:
-     * GET /api/history/activity
-     * 
-     * Response:
-     * [
-     *   {
-     *     "id": 1,
-     *     "activityTypeCode": "USER_LOGIN",
-     *     "activityTypeName": "User Login",
-     *     "description": "Logged in from Chrome 120 on Windows 10",
-     *     "activityDate": "2025-12-09T10:00:00",
-     *     "ip": "192.168.1.100",
-     *     "deviceId": "device_abc123"
-     *   },
-     *   {
-     *     "activityTypeCode": "EVENT_CREATED",
-     *     "activityTypeName": "Event Created",
-     *     "description": "Event: Spring Festival 2025",
-     *     "activityDate": "2025-12-09T10:30:00"
-     *   }
-     * ]
-     */
+    
     @GetMapping("/activity")
     @Operation(
         summary = "Get activity history",
@@ -447,15 +265,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get recent activities
-     * 
-     * Usage:
-     * GET /api/history/activity/recent?days=7
-     * 
-     * Query Parameters:
-     * - days: Number of days to look back (default: 7)
-     */
     @GetMapping("/activity/recent")
     @Operation(
         summary = "Get recent activities",
@@ -481,16 +290,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get activities by type
-     * 
-     * Usage:
-     * GET /api/history/activity/type/USER_LOGIN
-     * GET /api/history/activity/type/EVENT_CREATED
-     * 
-     * Path Parameters:
-     * - type: Activity type code (USER_LOGIN, EVENT_CREATED, PASSWORD_CHANGED, etc.)
-     */
     @GetMapping("/activity/type/{type}")
     @Operation(
         summary = "Get activities by type",
@@ -515,16 +314,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get activities by date range
-     * 
-     * Usage:
-     * GET /api/history/activity/range?startDate=2025-12-01T00:00:00&endDate=2025-12-09T23:59:59
-     * 
-     * Query Parameters:
-     * - startDate: Start date (ISO format: yyyy-MM-dd'T'HH:mm:ss)
-     * - endDate: End date (ISO format: yyyy-MM-dd'T'HH:mm:ss)
-     */
     @GetMapping("/activity/range")
     @Operation(
         summary = "Get activities by date range",
@@ -554,17 +343,6 @@ public class HistoryController {
         }
     }
     
-    /**
-     * Get activities by session
-     * 
-     * Usage:
-     * GET /api/history/activity/session/{sessionId}
-     * 
-     * Path Parameters:
-     * - sessionId: Session identifier (token UUID)
-     * 
-     * Use Case: See all activities performed in one login session
-     */
     @GetMapping("/activity/session/{sessionId}")
     @Operation(
         summary = "Get activities by session",

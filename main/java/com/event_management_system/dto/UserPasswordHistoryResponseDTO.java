@@ -6,14 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * UserPasswordHistoryResponseDTO
- * 
- * Response DTO for password change history
- * 
- * Used in API responses to show password change audit trail
- * Does NOT expose actual passwords (security)
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -24,6 +24,7 @@ import com.event_management_system.dto.EventRequestDTO;
 import com.event_management_system.dto.EventResponseDTO;
 import com.event_management_system.entity.User;
 import com.event_management_system.repository.UserRepository;
+import com.event_management_system.service.ApplicationLoggerService;
 import com.event_management_system.service.EventService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,6 +46,9 @@ public class EventController {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private ApplicationLoggerService logger;
 
     @PostMapping
     @Operation(summary = "Create a new event", description = "Creates a new event with provided details. The start time must be before end time.")
@@ -59,12 +63,23 @@ public class EventController {
             @Valid @RequestBody @NonNull EventRequestDTO eventRequestDTO,
             Authentication authentication) {
         
-        // Get current user ID from authentication
-        String email = authentication.getName();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-        EventResponseDTO savedEvent = eventService.createEvent(eventRequestDTO, currentUser.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedEvent);
+        try {
+            logger.traceWithContext("EventController", "createEvent() called with title={}, startTime={}, endTime={}, timestamp={}",
+                    eventRequestDTO.getTitle(), eventRequestDTO.getStartTime(), eventRequestDTO.getEndTime(), System.currentTimeMillis());
+            logger.debugWithContext("EventController", "POST /api/events - Creating event: title={}, location={}",
+                    eventRequestDTO.getTitle(), eventRequestDTO.getLocation());
+            String email = authentication.getName();
+            User currentUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            logger.debugWithContext("EventController", "User authenticated: userId={}, email={}", currentUser.getId(), email);
+            EventResponseDTO savedEvent = eventService.createEvent(eventRequestDTO, currentUser.getId());
+            logger.infoWithContext("EventController", "Event created successfully: eventId={}, title={}, userId={}",
+                    savedEvent.getId(), savedEvent.getTitle(), currentUser.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedEvent);
+        } catch (Exception e) {
+            logger.errorWithContext("EventController", "Failed to create event", e);
+            throw e;
+        }
     }
 
     @GetMapping
@@ -159,14 +174,27 @@ public class EventController {
             @Valid @RequestBody @NonNull EventRequestDTO eventDetails,
             Authentication authentication) {
         
-        String email = authentication.getName();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-        Optional<EventResponseDTO> eventOptional = eventService.updateEvent(id, eventDetails, currentUser.getId());
-        if (eventOptional.isPresent()) {
-            return ResponseEntity.ok(eventOptional.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        try {
+            logger.traceWithContext("EventController", "updateEvent() called with eventId={}, title={}, startTime={}",
+                    id, eventDetails.getTitle(), eventDetails.getStartTime());
+            logger.debugWithContext("EventController", "PUT /api/events/{} - Updating event: title={}", id, eventDetails.getTitle());
+            String email = authentication.getName();
+            User currentUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            logger.debugWithContext("EventController", "User authenticated: userId={}, email={}", currentUser.getId(), email);
+            Optional<EventResponseDTO> eventOptional = eventService.updateEvent(id, eventDetails, currentUser.getId());
+           
+            if (eventOptional.isPresent()) {
+                logger.infoWithContext("EventController", "Event updated successfully: eventId={}, title={}, userId={}",
+                        id, eventOptional.get().getTitle(), currentUser.getId());
+                return ResponseEntity.ok(eventOptional.get());
+            } else {
+                logger.warnWithContext("EventController", "Event not found for update: eventId={}, userId={}", id, currentUser.getId());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (Exception e) {
+            logger.errorWithContext("EventController", "Failed to update event: eventId={}", e);
+            throw e;
         }
     }
 
@@ -183,17 +211,27 @@ public class EventController {
             Authentication authentication) {
         
         try {
+            logger.traceWithContext("EventController", "deleteEvent() called with eventId={}, timestamp={}", id, System.currentTimeMillis());
+            logger.debugWithContext("EventController", "DELETE /api/events/{} - Deleting event", id);
             String email = authentication.getName();
             User currentUser = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            logger.debugWithContext("EventController", "User authenticated: userId={}, email={}", currentUser.getId(), email);
             boolean deleted = eventService.deleteEvent(id, currentUser.getId());
+           
             if (deleted) {
+                logger.infoWithContext("EventController", "Event deleted successfully: eventId={}, userId={}", id, currentUser.getId());
                 return ResponseEntity.ok().build();
             } else {
+                logger.warnWithContext("EventController", "Event not found for deletion: eventId={}, userId={}", id, currentUser.getId());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
         } catch (RuntimeException e) {
+            logger.warnWithContext("EventController", "Access denied for event deletion: eventId={}, error={}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            logger.errorWithContext("EventController", "Failed to delete event: eventId={}", e);
+            throw e;
         }
     }
 }

@@ -10,9 +10,6 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
-/**
- * Swagger configuration for Event Management System
- */
 @Configuration
 public class SwaggerConfig {
 
@@ -20,7 +17,6 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         final String securitySchemeName = "bearerAuth";
         
-        // Create schema for LocalDateTime to ensure consistent formatting
         Schema<?> localDateTimeSchema = new Schema<String>()
                 .type("string")
                 .format("date-time")

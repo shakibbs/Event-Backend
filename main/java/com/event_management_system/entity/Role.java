@@ -31,40 +31,4 @@ public class Role extends BaseEntity {
 
     @OneToMany(mappedBy = "role", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<RolePermission> rolePermissions = new HashSet<>();
-
-    /**
-     * Get permissions through the RolePermission junction table
-     */
-    public Set<Permission> getPermissions() {
-        Set<Permission> permissions = new HashSet<>();
-        if (rolePermissions != null) {
-            for (RolePermission rp : rolePermissions) {
-                if (rp.getPermission() != null) {
-                    permissions.add(rp.getPermission());
-                }
-            }
-        }
-        return permissions;
-    }
-
-    /**
-     * Add a permission to this role
-     */
-    public void addPermission(Permission permission) {
-        if (rolePermissions == null) {
-            rolePermissions = new HashSet<>();
-        }
-        RolePermission rp = new RolePermission(this, permission);
-        rolePermissions.add(rp);
-    }
-
-    /**
-     * Remove a permission from this role
-     */
-    public void removePermission(Permission permission) {
-        if (rolePermissions != null) {
-            rolePermissions.removeIf(rp -> rp.getPermission() != null &&
-                                         rp.getPermission().getId().equals(permission.getId()));
-        }
-    }
 }

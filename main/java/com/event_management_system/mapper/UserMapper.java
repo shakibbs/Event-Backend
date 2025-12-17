@@ -25,12 +25,10 @@ public class UserMapper {
         user.setFullName(userRequestDTO.getFullName());
         user.setEmail(userRequestDTO.getEmail());
         
-        // Hash password with BCrypt before storing
         if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
         }
         
-        // Handle role assignment if roleId is provided
         if (userRequestDTO.getRoleId() != null) {
             Role role = new Role();
             role.setId(userRequestDTO.getRoleId());
@@ -50,7 +48,6 @@ public class UserMapper {
         userResponseDTO.setFullName(user.getFullName());
         userResponseDTO.setEmail(user.getEmail());
         
-        // Convert single role to DTO
         if (user.getRole() != null) {
             RoleResponseDTO roleDTO = new RoleResponseDTO();
             roleDTO.setId(user.getRole().getId());
@@ -80,12 +77,10 @@ public class UserMapper {
         existingUser.setFullName(userRequestDTO.getFullName());
         existingUser.setEmail(userRequestDTO.getEmail());
         
-        // Hash password with BCrypt if provided (only update if new password given)
         if (userRequestDTO.getPassword() != null && !userRequestDTO.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(userRequestDTO.getPassword()));
         }
         
-        // Handle role updates if roleId is provided
         if (userRequestDTO.getRoleId() != null) {
             Role role = new Role();
             role.setId(userRequestDTO.getRoleId());
@@ -103,7 +98,6 @@ public class UserMapper {
         userResponseDTO.setFullName(user.getFullName());
         userResponseDTO.setEmail(user.getEmail());
         
-        // Convert single role to DTO
         if (user.getRole() != null) {
             RoleResponseDTO roleDTO = new RoleResponseDTO();
             roleDTO.setId(user.getRole().getId());
@@ -125,10 +119,6 @@ public class UserMapper {
         return userResponseDTO;
     }
 
-    /**
-     * Alias method for toDto - used by AuthService
-     * Maintains consistency with other mappers
-     */
     public UserResponseDTO toUserResponseDTO(User user) {
         return toDto(user);
     }

@@ -21,7 +21,6 @@ public class EventMapper {
         event.setTitle(dto.getTitle());
         event.setDescription(dto.getDescription());
         
-        // Convert string dates to LocalDateTime
         if (dto.getStartTime() != null) {
             event.setStartTime(LocalDateTime.parse(dto.getStartTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
@@ -45,7 +44,6 @@ public class EventMapper {
         dto.setTitle(entity.getTitle());
         dto.setDescription(entity.getDescription());
         
-        // Convert LocalDateTime to string format
         if (entity.getStartTime() != null) {
             dto.setStartTime(entity.getStartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
@@ -56,7 +54,6 @@ public class EventMapper {
         dto.setLocation(entity.getLocation());
         dto.setVisibility(entity.getVisibility());
         
-        // Convert LocalDateTime to string format
         if (entity.getCreatedAt() != null) {
             dto.setCreatedAt(entity.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
@@ -80,7 +77,6 @@ public class EventMapper {
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
         
-        // Convert string dates to LocalDateTime
         if (dto.getStartTime() != null) {
             entity.setStartTime(LocalDateTime.parse(dto.getStartTime(), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }

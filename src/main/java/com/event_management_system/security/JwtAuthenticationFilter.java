@@ -126,20 +126,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
-    /**
-     * Filter method: Called on every HTTP request
-     * 
-     * STEPS:
-     * 1. Try to extract JWT token from Authorization header
-     * 2. If token exists, validate it
-     * 3. If valid, load user and set in SecurityContext
-     * 4. If any error, continue without authentication
-     * 5. Continue to next filter/controller
-     * 
-     * @param request HTTP request
-     * @param response HTTP response
-     * @param filterChain Chain of filters to continue to
-     */
+
     @Override
     protected void doFilterInternal(
             @org.springframework.lang.NonNull HttpServletRequest request,
@@ -235,32 +222,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Extract JWT token from Authorization header
-     * 
-     * WHAT IT DOES:
-     * 1. Get Authorization header from request
-     * 2. Check if header starts with "Bearer "
-     * 3. Extract token part (everything after "Bearer ")
-     * 4. Validate token is not empty
-     * 5. Return token or null
-     * 
-     * HEADER FORMAT:
-     * Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWI...
-     * 
-     * EXTRACTION:
-     * Split by space: ["Bearer", "eyJhbGc..."]
-     * Return: "eyJhbGc..."
-     * 
-     * INVALID FORMATS:
-     * - No Authorization header → return null
-     * - "Bearer" without token → return null
-     * - "eyJhbGc..." (no Bearer prefix) → return null
-     * - "Basic xyz..." (wrong auth type) → return null
-     * 
-     * @param request HTTP request
-     * @return JWT token string, or null if not found
-     */
+
     private String extractTokenFromHeader(HttpServletRequest request) {
         // Get Authorization header
         String authHeader = request.getHeader("Authorization");

@@ -6,13 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * UserActivityHistoryResponseDTO
- * 
- * Response DTO for user activity history
- * 
- * Used in API responses to show complete activity audit trail
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -1,9 +1,10 @@
 # 🔐 COMPREHENSIVE JWT SECURITY & TOKEN VERIFICATION REPORT
 
-**Generated:** December 4, 2025  
+**Last Updated:** December 17, 2025  
 **Project:** Event Management System  
+**Version:** 1.3.0  
 **Security Framework:** Spring Security 6.2.8 + JWT (JJWT 0.12.3)  
-**Algorithm:** HS512 (HMAC SHA-512)
+**Algorithm:** HS512 (HMAC SHA-512)  
 
 ---
 
@@ -14,9 +15,10 @@
 3. [Login Flow (Token Generation)](#login-flow-token-generation)
 4. [Token Verification Flow](#token-verification-flow)
 5. [Security Components](#security-components)
-6. [Error Handling & Security](#error-handling--security)
-7. [Token Lifecycle](#token-lifecycle)
-8. [Deployment Security Checklist](#deployment-security-checklist)
+6. [Activity Audit Trail](#activity-audit-trail)
+7. [Error Handling & Security](#error-handling--security)
+8. [Token Lifecycle](#token-lifecycle)
+9. [Deployment Security Checklist](#deployment-security-checklist)
 
 ---
 
@@ -670,7 +672,71 @@ public ResponseEntity<List<EventResponseDTO>> getEvents() { ... }
 
 ---
 
-## ⚠️ ERROR HANDLING & SECURITY
+## 📋 ACTIVITY AUDIT TRAIL
+
+### Purpose
+
+The audit trail provides **security visibility** by tracking:
+- Login/logout events (who, when, IP address, device info)
+- Password changes (who changed it, when)
+- Critical operations (user creation, role assignment, event management)
+
+### Audit Trail Components
+
+**1. UserLoginLogoutHistory**
+```sql
+UserLoginLogoutHistory {
+  id: Long,
+  user_id: Long,
+  login_time: DateTime,
+  logout_time: DateTime (nullable),
+  ip_address: String,
+  device_info: String,
+  token_uuid: String,
+  status: Enum (SUCCESS, FAILED)
+}
+```
+
+**Use:** Detect unauthorized access attempts, track login patterns
+
+**2. UserPasswordHistory**
+```sql
+UserPasswordHistory {
+  id: Long,
+  user_id: Long,
+  old_password_hash: String,
+  new_password_hash: String,
+  changed_by_id: Long,
+  changed_at: DateTime
+}
+```
+
+**Use:** Verify password change history, detect compromised accounts
+
+**3. UserActivityHistory**
+```sql
+UserActivityHistory {
+  id: Long,
+  user_id: Long,
+  activity_type: Enum (USER_LOGIN, USER_LOGOUT, USER_CREATED, USER_UPDATED, etc.),
+  description: String,
+  ip_address: String,
+  device_id: String,
+  session_id: String,
+  created_at: DateTime
+}
+```
+
+**Use:** Complete audit trail of all critical operations
+
+### Security Benefits
+
+✅ **Detect Breaches** - Unusual login patterns
+✅ **Compliance** - Meet regulatory requirements (audit logs)
+✅ **Forensics** - Investigate security incidents
+✅ **Account Recovery** - Verify legitimate vs unauthorized access
+
+---
 
 ### 1. **Invalid Credentials Response**
 
@@ -866,17 +932,22 @@ Timeline:
 11. **Authorization** → Filter stores in SecurityContext
 12. **Access** → Controller checks role/permission via @PreAuthorize
 13. **Response** → User gets data if authorized
+14. **Audit** → Activity tracked in database for compliance
 
-### Key Security Features
+### Key Security Features (v1.3.0)
 
-✓ **Stateless** - No session storage needed  
-✓ **Tamper-proof** - Signature verification prevents forgery  
-✓ **Server-side logout** - Token cache enables instant logout  
-✓ **Password secure** - BCrypt hashing protects passwords  
-✓ **Role-based** - Fine-grained authorization control  
-✓ **Token expiration** - Limited lifetime reduces risk  
+✅ **Stateless Authentication** - No session storage needed  
+✅ **Tamper-proof Tokens** - HS512 signature verification  
+✅ **Server-side Logout** - Token cache enables instant logout  
+✅ **BCrypt Password Hashing** - Protects passwords at rest  
+✅ **Role-Based Access Control** - Fine-grained authorization  
+✅ **Token Expiration** - Limited lifetime reduces breach impact  
+✅ **Audit Trail** - Complete activity logging for compliance  
+✅ **Password History** - Track password changes for security  
+✅ **Login/Logout Tracking** - Detect unauthorized access  
 
 ---
 
-**Last Updated:** December 4, 2025  
+**Last Updated:** December 17, 2025  
+**Version:** 1.3.0  
 **Status:** Production Ready (with deployment checklist items completed)

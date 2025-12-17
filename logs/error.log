@@ -1,0 +1,24 @@
+2025-12-17 16:33:06.717 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+The dependencies of some of the beans in the application context form a cycle:
+
+   eventController (field private com.event_management_system.service.EventService com.event_management_system.controller.EventController.eventService)
+      ↓
+   eventService (field private com.event_management_system.service.UserService com.event_management_system.service.EventService.userService)
+┌─────┐
+|  roleService (field private com.event_management_system.mapper.RoleMapper com.event_management_system.service.RoleService.roleMapper)
+↑     ↓
+|  roleMapper (field private com.event_management_system.service.RoleService com.event_management_system.mapper.RoleMapper.roleService)
+└─────┘
+
+
+Action:
+
+Relying upon circular references is discouraged and they are prohibited by default. Update your application to remove the dependency cycle between beans. As a last resort, it may be possible to break the cycle automatically by setting spring.main.allow-circular-references to true.
+

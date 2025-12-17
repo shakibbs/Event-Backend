@@ -36,6 +36,14 @@ A comprehensive Spring Boot-based REST API for managing events with enterprise-g
 - 🔒 **Permission-Based Authorization** (@PreAuthorize support)
 - 📋 **Audit Trail** (created_at, updated_at timestamps)
 
+### Logging & Monitoring Features
+- 📝 **5-Level Logging** (TRACE, DEBUG, INFO, WARN, ERROR)
+- 📊 **Daily Log Rotation** (separate files for controllers/services/errors)
+- 🗂️ **Automatic Log Archiving** (30-day retention with compression)
+- 📈 **Service Layer Logging** (comprehensive tracking of all business operations)
+- 🎯 **Activity Audit Trail** (user login/logout, event creation/modification)
+- 🔍 **Request/Response Logging** (API endpoint tracking)
+
 ## Technologies Used
 
 ### Backend Framework
@@ -81,7 +89,8 @@ src/main/java/com/event_management_system/
 │   ├── UserController.java # User management
 │   ├── RoleController.java # Role management
 │   ├── PermissionController.java # Permission management
-│   └── EventController.java # Event management
+│   ├── EventController.java # Event management
+│   └── HistoryController.java # History/Audit trail
 ├── dto/                    # Data Transfer Objects
 │   ├── LoginRequestDTO.java
 │   ├── AuthResponseDTO.java
@@ -90,7 +99,10 @@ src/main/java/com/event_management_system/
 │   ├── RoleDTO.java
 │   ├── PermissionDTO.java
 │   ├── EventRequestDTO.java
-│   └── EventResponseDTO.java
+│   ├── EventResponseDTO.java
+│   ├── UserActivityHistoryResponseDTO.java
+│   ├── UserLoginLogoutHistoryResponseDTO.java
+│   └── UserPasswordHistoryResponseDTO.java
 ├── entity/                 # JPA entities
 │   ├── BaseEntity.java     # Abstract base with timestamps
 │   ├── User.java
@@ -98,6 +110,62 @@ src/main/java/com/event_management_system/
 │   ├── Permission.java
 │   ├── RolePermission.java
 │   ├── Event.java
+│   ├── UserActivityHistory.java
+│   ├── UserLoginLogoutHistory.java
+│   └── UserPasswordHistory.java
+├── exception/              # Exception handling
+│   ├── GlobalExceptionHandler.java
+│   └── Custom exceptions
+├── mapper/                 # Object mapping utilities
+│   ├── EventMapper.java
+│   ├── UserMapper.java
+│   ├── RoleMapper.java
+│   └── PermissionMapper.java
+├── repository/             # JPA repositories
+│   ├── UserRepository.java
+│   ├── RoleRepository.java
+│   ├── PermissionRepository.java
+│   ├── EventRepository.java
+│   ├── UserActivityHistoryRepository.java
+│   ├── UserLoginLogoutHistoryRepository.java
+│   └── UserPasswordHistoryRepository.java
+├── security/               # Security components
+│   ├── JwtService.java     # JWT generation & validation
+│   ├── JwtAuthenticationFilter.java # Authentication filter
+│   ├── TokenCacheService.java # Server-side token cache
+│   └── CustomUserDetailsService.java
+├── service/                # Business logic
+│   ├── ApplicationLoggerService.java # Centralized logging
+│   ├── AuthService.java    # Authentication service
+│   ├── UserService.java    # User management
+│   ├── RoleService.java    # Role management
+│   ├── EventService.java   # Event management
+│   ├── PermissionService.java # Permission management
+│   ├── UserActivityHistoryService.java # Activity logging
+│   ├── UserLoginLogoutHistoryService.java # Login/Logout tracking
+│   └── UserPasswordHistoryService.java # Password change tracking
+└── EventManagementSystemApplication.java
+
+src/main/resources/
+├── application.properties  # Application configuration
+├── logback-spring.xml     # Logging configuration (daily rotation)
+└── db/
+    └── migration/         # Database migration scripts (if using Flyway)
+
+src/test/java/com/event_management_system/
+└── PasswordTest.java      # Unit tests
+
+logs/
+├── application.log        # TODAY's all logs (ACTIVE)
+├── event-controller.log   # TODAY's controller logs (ACTIVE)
+├── service.log           # TODAY's service logs (ACTIVE)
+├── error.log             # TODAY's error logs (ACTIVE)
+└── archive/              # Historical logs (compressed)
+    ├── application-2025-12-20.1.log.gz
+    ├── event-controller-2025-12-20.1.log.gz
+    ├── service-2025-12-20.1.log.gz
+    └── error-2025-12-20.1.log.gz
+```
 │   └── Event.Visibility    # Event visibility enum (inner enum)
 ├── exception/              # Exception handling
 │   ├── GlobalExceptionHandler.java
@@ -506,19 +574,39 @@ app.jwt.access-token-expiration=2700000  # 45 minutes
 app.jwt.refresh-token-expiration=604800000  # 7 days
 ```
 
-### Server Configuration
+### Logging Configuration
+
+The application uses **Logback** for comprehensive logging with daily rotation:
 
 ```properties
-# Server Configuration
-server.port=8080
-server.servlet.context-path=/
-
-# Application Name
-spring.application.name=event-management-system
-
-# Logging
-logging.level.root=INFO
+# Log Levels
+logging.level.root=WARN
 logging.level.com.event_management_system=DEBUG
+logging.level.org.springframework.security=DEBUG
+
+# Log Files (Daily Rotation)
+logs/application.log          # All logs
+logs/event-controller.log     # Controller logs only
+logs/service.log              # Service logs only
+logs/error.log                # Error logs only
+logs/archive/                 # Historical logs (30-day retention)
+
+# Rolling Policy
+Max file size: 10MB
+Max history: 30 days
+Total size cap: 1GB (prevents disk overflow)
+```
+
+**View Logs:**
+```bash
+# View today's logs (live)
+Get-Content logs/application.log -Wait
+
+# View errors only
+Get-Content logs/error.log
+
+# View last 50 service logs
+Get-Content logs/service.log -Tail 50
 ```
 
 ## Deployment
@@ -595,12 +683,24 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Changelog
 
-### v1.2.0 (Current)
+### v1.3.0 (Current - December 2025)
+- ✅ Added comprehensive 5-level logging (TRACE, DEBUG, INFO, WARN, ERROR)
+- ✅ Implemented daily log rotation with automatic archiving
+- ✅ Created separate log files (application, controller, service, error)
+- ✅ Added 30-day log retention with auto-cleanup
+- ✅ Injected ApplicationLoggerService in all 5 services
+- ✅ Complete audit trail for all business operations
+- ✅ User activity history tracking (login/logout, password changes)
+- ✅ Refactored service layer for better separation of concerns
+- ✅ Removed redundant methods from entity layer
+
+### v1.2.0 (December 2025)
 - ✅ Added JWT Authentication with HS512 signing
 - ✅ Implemented Role-Based Access Control (RBAC)
 - ✅ Added server-side token caching for logout support
 - ✅ Comprehensive security report
 - ✅ Enhanced API endpoints with authentication
+- ✅ Activity audit trail implementation
 
 ### v1.1.0
 - Event CRUD operations

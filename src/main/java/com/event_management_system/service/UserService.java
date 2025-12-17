@@ -38,6 +38,9 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
 
     @Autowired
+    private ApplicationLoggerService logger;
+
+    @Autowired
     private UserRepository userRepository;
     
     @Autowired
@@ -61,6 +64,9 @@ public class UserService {
     @Autowired
     private JwtService jwtService;
     
+    @Autowired
+    private RoleService roleService;
+    
     @Autowired(required = false)
     private HttpServletRequest request;
     
@@ -69,22 +75,32 @@ public class UserService {
 
     @Transactional
     public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
+        // TRACE: Entry point
+        logger.trace("[UserService] TRACE - createUser() called with email=" + userRequestDTO.getEmail());
+        
+        // DEBUG: Creating user entity
+        logger.debug("[UserService] DEBUG - createUser() - Creating user entity from DTO");
         User user = userMapper.toEntity(userRequestDTO);
         user.recordCreation("system");
         
-        // Validate that the role exists before assigning
+        // DEBUG: Validating role exists
         if (user.getRole() != null && user.getRole().getId() != null) {
             Long roleId = user.getRole().getId();
             if (roleId != null) {
                 boolean roleExists = roleRepository.existsById(roleId);
                 if (!roleExists) {
+                    logger.warn("[UserService] WARN - Attempted to create user with non-existent roleId=" + roleId);
                     throw new RuntimeException("Role with ID " + roleId + " does not exist");
                 }
+                logger.debug("[UserService] DEBUG - createUser() - Role validation passed for roleId=" + roleId);
             }
         }
         
         User savedUser = userRepository.save(user);
         User currentUser = getCurrentUser();
+        
+        // INFO: User created successfully
+        logger.info("[UserService] INFO - User created successfully: userId=" + savedUser.getId() + ", email=" + savedUser.getEmail() + ", role=" + (savedUser.getRole() != null ? savedUser.getRole().getName() : "None"));
         
         // Record password creation in history (for new user, no old password)
         try {
@@ -98,7 +114,7 @@ public class UserService {
                 );
             }
         } catch (Exception e) {
-            log.error("Failed to record password history: {}", e.getMessage());
+            logger.error("[UserService] ERROR - Failed to record password history: " + e.getMessage());
         }
         
         // Record user creation activity with full details
@@ -117,7 +133,7 @@ public class UserService {
                 sessionId
             );
         } catch (Exception e) {
-            log.error("Failed to record user creation activity: {}", e.getMessage());
+            logger.error("[UserService] ERROR - Failed to record user creation activity: " + e.getMessage());
         }
         
         return userMapper.toDto(savedUser);
@@ -152,17 +168,28 @@ public class UserService {
 
     @Transactional
     public Optional<UserResponseDTO> updateUser(@NonNull Long currentUserId, @NonNull Long targetUserId, UserRequestDTO userRequestDTO) {
+        // TRACE: Entry point
+        logger.trace("[UserService] TRACE - updateUser() called with currentUserId=" + currentUserId + ", targetUserId=" + targetUserId);
+        
+        // DEBUG: Checking permission
+        logger.debug("[UserService] DEBUG - updateUser() - Checking manage permission");
         // Check if current user can manage the target user
         if (!canManageUser(currentUserId, targetUserId)) {
+            logger.warn("[UserService] WARN - User " + currentUserId + " not authorized to update user " + targetUserId);
             throw new RuntimeException("You don't have permission to update this user");
         }
         
         return userRepository.findById(targetUserId).map(existingUser -> {
             String oldFullName = existingUser.getFullName();
             String oldEmail = existingUser.getEmail();
+            
+            logger.debug("[UserService] DEBUG - updateUser() - Updating user entity");
             userMapper.updateEntity(userRequestDTO, existingUser);
             existingUser.recordUpdate("system");
             User updatedUser = userRepository.save(existingUser);
+            
+            // INFO: User updated successfully
+            logger.info("[UserService] INFO - User updated successfully: userId=" + updatedUser.getId() + ", email=" + updatedUser.getEmail());
             
             // Record user update activity with full details
             try {
@@ -188,7 +215,7 @@ public class UserService {
                     sessionId
                 );
             } catch (Exception e) {
-                log.error("Failed to record user update activity: {}", e.getMessage());
+                logger.error("[UserService] ERROR - Failed to record user update activity: " + e.getMessage());
             }
             
             return userMapper.toDto(updatedUser);
@@ -197,16 +224,27 @@ public class UserService {
 
     @Transactional
     public boolean deleteUser(@NonNull Long currentUserId, @NonNull Long targetUserId) {
+        // TRACE: Entry point
+        logger.trace("[UserService] TRACE - deleteUser() called with currentUserId=" + currentUserId + ", targetUserId=" + targetUserId);
+        
+        // DEBUG: Checking permission
+        logger.debug("[UserService] DEBUG - deleteUser() - Checking manage permission");
         // Check if current user can manage the target user
         if (!canManageUser(currentUserId, targetUserId)) {
+            logger.warn("[UserService] WARN - User " + currentUserId + " not authorized to delete user " + targetUserId);
             throw new RuntimeException("You don't have permission to delete this user");
         }
         
         return userRepository.findById(targetUserId).map(user -> {
             String deletedUserName = user.getFullName();
             String deletedUserEmail = user.getEmail();
+            
+            logger.debug("[UserService] DEBUG - deleteUser() - Marking user as deleted");
             user.markDeleted();
             userRepository.save(user);
+            
+            // INFO: User deleted successfully
+            logger.info("[UserService] INFO - User deleted successfully: userId=" + targetUserId + ", email=" + deletedUserEmail);
             
             // Record user deletion activity with full details
             try {
@@ -224,7 +262,7 @@ public class UserService {
                     sessionId
                 );
             } catch (Exception e) {
-                log.error("Failed to record user deletion activity: {}", e.getMessage());
+                logger.error("[UserService] ERROR - Failed to record user deletion activity: " + e.getMessage());
             }
             
             return true;
@@ -314,8 +352,9 @@ public class UserService {
                     log.info("Checking permission '{}' for user {}", permissionName, userId);
                     log.info("User role: {}", user.getRole() != null ? user.getRole().getName() : "null");
                     
-                    if (user.getRole() != null && user.getRole().getPermissions() != null) {
-                        Set<Permission> permissions = user.getRole().getPermissions();
+                    if (user.getRole() != null && user.getRole().getId() != null) {
+                        // Get permissions from RoleService instead of entity
+                        Set<Permission> permissions = roleService.getPermissionsForRole(user.getRole().getId());
                         log.info("User has {} permissions: {}", 
                             permissions.size(), 
                             permissions.stream().map(Permission::getName).collect(java.util.stream.Collectors.joining(", ")));

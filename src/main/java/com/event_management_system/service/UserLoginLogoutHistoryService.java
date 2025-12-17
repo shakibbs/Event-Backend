@@ -80,17 +80,7 @@ public class UserLoginLogoutHistoryService {
         return Objects.requireNonNull(saved, "Saved login history should not be null");
     }
     
-    /**
-     * Record a logout event
-     * 
-     * Updates the logout time for the session with the given token
-     * 
-     * Usage:
-     * userLoginLogoutHistoryService.recordLogout(jwtToken);
-     * 
-     * @param userToken - JWT token for the session
-     * @return true if logout recorded, false if session not found
-     */
+    
     @Transactional
     public boolean recordLogout(@NonNull String userToken) {
         return loginHistoryRepository.findByUserToken(userToken)

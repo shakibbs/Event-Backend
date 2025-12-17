@@ -4,20 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
-/**
- * ChangePasswordRequestDTO
- * 
- * Request body for user password change
- * 
- * Fields:
- * - oldPassword: Current password (for verification)
- * - newPassword: New password to set
- * - confirmPassword: Confirmation of new password
- * 
- * Validation:
- * - All fields required
- * - New password minimum 6 characters
- */
 @Data
 public class ChangePasswordRequestDTO {
     

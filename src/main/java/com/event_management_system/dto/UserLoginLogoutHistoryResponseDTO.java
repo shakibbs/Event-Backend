@@ -6,13 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * UserLoginLogoutHistoryResponseDTO
- * 
- * Response DTO for login/logout history
- * 
- * Used in API responses to show login sessions and security events
- */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,6 +22,5 @@ public class UserLoginLogoutHistoryResponseDTO {
     private String deviceInfo;
     private String loginStatus;
     
-    // Helper field to check if session is still active
     private Boolean isActiveSession;
 }

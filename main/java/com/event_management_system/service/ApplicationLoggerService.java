@@ -4,38 +4,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * ApplicationLoggerService
- * 
- * Centralized logging service for the entire application.
- * Provides consistent logging across all controllers and services.
- * 
- * Log Levels:
- * - TRACE: Variable values, detailed debugging info
- * - DEBUG: Technical details, method parameters
- * - INFO: Business actions (created, updated, deleted successfully)
- * - WARN: Recoverable errors (resource not found, access denied)
- * - ERROR: Failures (database errors, exceptions)
- * 
- * Usage Example:
- * 
- * @Autowired
- * private ApplicationLoggerService logger;
- * 
- * // Simple logging
- * logger.info("User created successfully");
- * 
- * // Parameterized logging with context
- * logger.debug("[EventController] Event request: id={}, title={}", eventId, eventTitle);
- * 
- * // Exception logging
- * logger.error("Failed to create event", exception);
- * 
- * // Method tracking
- * logger.methodEntry("[EventController.createEvent]");
- * logger.methodExit("[EventController.createEvent]");
- * logger.methodException("[EventController.createEvent]", exception);
- */
+
 @Slf4j
 @Service
 public class ApplicationLoggerService {

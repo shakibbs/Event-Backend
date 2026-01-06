@@ -79,4 +79,8 @@ public class Event extends BaseEntity {
     )
     private Set<User> attendees = new HashSet<>();
 
+    public String getName() {
+        return this.title;
+    }
+
 }

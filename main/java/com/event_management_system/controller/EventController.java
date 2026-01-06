@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.event_management_system.dto.EventRequestDTO;
 import com.event_management_system.dto.EventResponseDTO;
+import com.event_management_system.dto.InviteAttendeeRequestDTO;
 import com.event_management_system.entity.User;
 import com.event_management_system.repository.UserRepository;
 import com.event_management_system.service.ApplicationLoggerService;
@@ -231,6 +232,182 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (Exception e) {
             logger.errorWithContext("EventController", "Failed to delete event: eventId={}", e);
+            throw e;
+        }
+    }
+
+    @PostMapping("/{eventId}/attend")
+    @Operation(
+        summary = "Attend a PUBLIC event", 
+        description = "Allows a user to self-register for a PUBLIC event. " +
+                     "PRIVATE and INVITE_ONLY events require an invitation from the organizer. " +
+                     "User cannot attend if already registered or if event has started."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully registered for the event"),
+        @ApiResponse(responseCode = "400", description = "Event is not PUBLIC or already attending"),
+        @ApiResponse(responseCode = "403", description = "No permission to attend events"),
+        @ApiResponse(responseCode = "404", description = "Event not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<String> attendEvent(
+            @Parameter(description = "Unique identifier of the event to attend", required = true, example = "1")
+            @PathVariable @NonNull Long eventId,
+            Authentication authentication) {
+        
+        try {
+            logger.traceWithContext(
+                "EventController", 
+                "attendEvent",
+                "attendEvent() called with eventId={}, timestamp={}", 
+                eventId, System.currentTimeMillis()
+            );
+            
+            logger.debugWithContext(
+                "EventController",
+                "attendEvent", 
+                "POST /api/events/{}/attend - User attempting to attend event", 
+                eventId
+            );
+            
+            // Extract current user from JWT token
+            String email = authentication.getName();
+            User currentUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            
+            logger.debugWithContext(
+                "EventController",
+                "attendEvent",
+                "User authenticated: userId={}, email={}", 
+                currentUser.getId(), email
+            );
+            
+            // Call service to register user for PUBLIC event
+            boolean success = eventService.attendPublicEvent(eventId, currentUser.getId());
+            
+            if (success) {
+                logger.infoWithContext(
+                    "EventController",
+                    "attendEvent",
+                    "User successfully registered for event: eventId={}, userId={}", 
+                    eventId, currentUser.getId()
+                );
+                return ResponseEntity.ok("Successfully registered for the event");
+            } else {
+                logger.warnWithContext(
+                    "EventController",
+                    "attendEvent",
+                    "User already attending or event not found: eventId={}, userId={}", 
+                    eventId, currentUser.getId()
+                );
+                return ResponseEntity.badRequest().body("Already attending or event not found");
+            }
+            
+        } catch (RuntimeException e) {
+            logger.warnWithContext(
+                "EventController",
+                "attendEvent",
+                "Failed to attend event: eventId={}, error={}", 
+                eventId, e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            logger.errorWithContext(
+                "EventController",
+                "attendEvent",
+                e
+            );
+            throw e;
+        }
+    }
+
+    @PostMapping("/{eventId}/invite")
+    @Operation(
+        summary = "Invite a user to a PRIVATE/INVITE_ONLY event", 
+        description = "Allows an event organizer to invite a user to their PRIVATE or INVITE_ONLY event. " +
+                     "Only the event organizer can send invitations. " +
+                     "PUBLIC events don't need invitations (users can self-register)."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User successfully invited to the event"),
+        @ApiResponse(responseCode = "400", description = "Invalid request or user already attending"),
+        @ApiResponse(responseCode = "403", description = "Not the event organizer or no permission"),
+        @ApiResponse(responseCode = "404", description = "Event or user not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<String> inviteAttendee(
+            @Parameter(description = "Unique identifier of the event", required = true, example = "1")
+            @PathVariable @NonNull Long eventId,
+            @Parameter(description = "Details of user to invite", required = true)
+            @Valid @RequestBody @NonNull InviteAttendeeRequestDTO inviteRequest,
+            Authentication authentication) {
+        
+        try {
+            logger.traceWithContext(
+                "EventController",
+                "inviteAttendee",
+                "inviteAttendee() called with eventId={}, targetUserId={}, timestamp={}", 
+                eventId, inviteRequest.getUserId(), System.currentTimeMillis()
+            );
+            
+            logger.debugWithContext(
+                "EventController",
+                "inviteAttendee",
+                "POST /api/events/{}/invite - Organizer inviting userId={}", 
+                eventId, inviteRequest.getUserId()
+            );
+            
+            // Extract current user (organizer) from JWT token
+            String email = authentication.getName();
+            User organizer = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            
+            logger.debugWithContext(
+                "EventController",
+                "inviteAttendee",
+                "Organizer authenticated: organizerId={}, email={}", 
+                organizer.getId(), email
+            );
+            
+            // Call service to invite user to PRIVATE/INVITE_ONLY event
+            boolean success = eventService.inviteToPrivateEvent(
+                eventId, 
+                inviteRequest.getUserId(), 
+                organizer.getId()
+            );
+            
+            if (success) {
+                logger.infoWithContext(
+                    "EventController",
+                    "inviteAttendee",
+                    "User successfully invited: eventId={}, invitedUserId={}, organizerId={}", 
+                    eventId, inviteRequest.getUserId(), organizer.getId()
+                );
+                return ResponseEntity.ok("User successfully invited to the event");
+            } else {
+                logger.warnWithContext(
+                    "EventController",
+                    "inviteAttendee",
+                    "Failed to invite user (already attending or not found): eventId={}, userId={}", 
+                    eventId, inviteRequest.getUserId()
+                );
+                return ResponseEntity.badRequest().body("User already attending or not found");
+            }
+            
+        } catch (RuntimeException e) {
+            logger.warnWithContext(
+                "EventController",
+                "inviteAttendee",
+                "Failed to invite user: eventId={}, error={}", 
+                eventId, e.getMessage()
+            );
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (Exception e) {
+            logger.errorWithContext(
+                "EventController",
+                "inviteAttendee",
+                e
+            );
             throw e;
         }
     }

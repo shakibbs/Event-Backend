@@ -3,21 +3,15 @@ package com.event_management_system.mapper;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.event_management_system.dto.PermissionResponseDTO;
 import com.event_management_system.dto.RoleRequestDTO;
 import com.event_management_system.dto.RoleResponseDTO;
-import com.event_management_system.entity.Permission;
 import com.event_management_system.entity.Role;
-import com.event_management_system.service.RoleService;
 
 @Component
 public class RoleMapper {
-
-    @Autowired(required = false)
-    private RoleService roleService;
 
     public Role toEntity(RoleRequestDTO dto) {
         if (dto == null) {
@@ -26,7 +20,6 @@ public class RoleMapper {
         
         Role role = new Role();
         role.setName(dto.getName());
-        
         
         return role;
     }
@@ -40,27 +33,26 @@ public class RoleMapper {
         dto.setId(entity.getId());
         dto.setName(entity.getName());
         
-        // Get permissions from service
-        if (roleService != null && entity.getId() != null) {
-            Set<Permission> permissions = roleService.getPermissionsForRole(entity.getId());
-            if (permissions != null && !permissions.isEmpty()) {
-                dto.setPermissions(permissions.stream()
-                        .map(permission -> {
-                            PermissionResponseDTO permissionDto = new PermissionResponseDTO();
-                            permissionDto.setId(permission.getId());
-                            permissionDto.setName(permission.getName());
-                            permissionDto.setStatus(permission.getStatus() != null ? permission.getStatus().toString() : null);
-                            permissionDto.setCreatedAt(permission.getCreatedAt());
-                            permissionDto.setCreatedBy(permission.getCreatedBy());
-                            permissionDto.setUpdatedAt(permission.getUpdatedAt());
-                            permissionDto.setUpdatedBy(permission.getUpdatedBy());
-                            permissionDto.setDeleted(permission.getDeleted());
-                            return permissionDto;
-                        })
-                        .collect(Collectors.toSet()));
-            } else {
-                dto.setPermissions(null);
-            }
+        // Get permissions directly from entity relationship (no service/mapper injection needed)
+        if (entity.getRolePermissions() != null && !entity.getRolePermissions().isEmpty()) {
+            Set<PermissionResponseDTO> permissions = entity.getRolePermissions().stream()
+                    .filter(rp -> rp.getPermission() != null)
+                    .map(rp -> {
+                        PermissionResponseDTO permissionDto = new PermissionResponseDTO();
+                        permissionDto.setId(rp.getPermission().getId());
+                        permissionDto.setName(rp.getPermission().getName());
+                        permissionDto.setStatus(rp.getPermission().getStatus() != null ? rp.getPermission().getStatus().toString() : null);
+                        permissionDto.setCreatedAt(rp.getPermission().getCreatedAt());
+                        permissionDto.setCreatedBy(rp.getPermission().getCreatedBy());
+                        permissionDto.setUpdatedAt(rp.getPermission().getUpdatedAt());
+                        permissionDto.setUpdatedBy(rp.getPermission().getUpdatedBy());
+                        permissionDto.setDeleted(rp.getPermission().getDeleted());
+                        return permissionDto;
+                    })
+                    .collect(Collectors.toSet());
+            dto.setPermissions(permissions);
+        } else {
+            dto.setPermissions(null);
         }
         
         dto.setCreatedAt(entity.getCreatedAt());
@@ -79,6 +71,5 @@ public class RoleMapper {
         }
         
         entity.setName(dto.getName());
-        
     }
 }

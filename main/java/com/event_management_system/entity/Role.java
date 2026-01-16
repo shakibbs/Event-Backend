@@ -17,12 +17,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "app_roles")
+@Table(name = "event_roles")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Role extends BaseEntity {
+public class Role extends BaseAuditEntity {
 
     @NotBlank(message = "Role name is required")
     @Size(min = 3, max = 50, message = "Role name must be between 3 and 50 characters")

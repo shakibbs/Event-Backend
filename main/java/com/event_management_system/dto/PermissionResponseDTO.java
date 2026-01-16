@@ -14,7 +14,6 @@ public class PermissionResponseDTO {
     private Long id;
     private String name;
     private String description;
-    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String createdBy;

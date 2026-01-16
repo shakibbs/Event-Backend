@@ -3,8 +3,6 @@ package com.event_management_system.dto;
 import java.time.LocalDateTime;
 import java.util.Set;
 
-import com.event_management_system.entity.BaseEntity;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -21,6 +19,5 @@ public class RoleResponseDTO {
     private LocalDateTime updatedAt;
     private String createdBy;
     private String updatedBy;
-    private BaseEntity.Status status;
     private Boolean deleted;
 }

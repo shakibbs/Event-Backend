@@ -1,303 +1,387 @@
 package com.event_management_system.service;
 
-import com.event_management_system.entity.Event;
-import com.event_management_system.entity.User;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
+import com.event_management_system.entity.Event;
+import com.event_management_system.entity.User;
 
-/**
- * Service for sending email notifications.
- * Handles event reminder emails to attendees.
- * 
- * Purpose:
- * - Send professionally formatted HTML emails
- * - Abstract email sending logic from scheduler
- * - Centralize email template management
- * 
- * Dependencies:
- * - JavaMailSender: Spring's email sending interface (autowired from spring-boot-starter-mail)
- * - Configuration from application.properties (SMTP settings)
- * 
- * Email Flow:
- * 1. EventReminderJob calls sendEventReminder(event, user)
- * 2. Service creates HTML email with event details
- * 3. JavaMailSender sends via SMTP (Gmail, SendGrid, etc.)
- * 4. Returns true/false based on success
- */
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-    /**
-     * JavaMailSender - Spring's abstraction for sending emails
-     * 
-     * How it's autowired:
-     * - @RequiredArgsConstructor (Lombok) generates constructor
-     * - Spring sees spring-boot-starter-mail dependency
-     * - Spring auto-configures JavaMailSender bean using application.properties
-     * - Bean is injected into this final field
-     * 
-     * What it does:
-     * - Connects to SMTP server (Gmail, SendGrid, etc.)
-     * - Sends MimeMessage (email with HTML, attachments, etc.)
-     * - Handles connection pooling and retries
-     */
     private final JavaMailSender mailSender;
+    private final ApplicationLoggerService log;
 
-    /**
-     * ApplicationLoggerService - Our custom logging service
-     * Used for consistent, context-aware logging across the application
-     */
-    private final ApplicationLoggerService logger;
-
-    /**
-     * Email sender address from application.properties
-     * 
-     * @Value annotation:
-     * - Reads "app.mail.from" property
-     * - Injects value into this field at runtime
-     * - Default: "noreply@eventmanagement.com" if property not found
-     * 
-     * Example in application.properties:
-     * app.mail.from=noreply@eventmanagement.com
-     */
     @Value("${app.mail.from:noreply@eventmanagement.com}")
     private String fromEmail;
 
-    /**
-     * Email sender name (display name in recipient's inbox)
-     * 
-     * Example in application.properties:
-     * app.mail.fromName=Event Management System
-     * 
-     * How it appears to user:
-     * From: Event Management System <noreply@eventmanagement.com>
-     */
     @Value("${app.mail.fromName:Event Management System}")
     private String fromName;
 
-    /**
-     * Date formatter for displaying event date/time in emails
-     * Pattern: "MMMM dd, yyyy 'at' hh:mm a"
-     * Example: "January 15, 2026 at 02:30 PM"
-     * 
-     * Why this pattern:
-     * - MMMM: Full month name (January)
-     * - dd: Day with leading zero (01, 15)
-     * - yyyy: 4-digit year (2026)
-     * - hh:mm: 12-hour time with minutes (02:30)
-     * - a: AM/PM marker
-     */
+    @Value("${app.base.url:http://localhost:8083}")
+    private String baseUrl;
+
     private static final DateTimeFormatter DATE_FORMATTER = 
         DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' hh:mm a");
 
-    /**
-     * Send event reminder email to a single attendee.
-     * 
-     * Flow:
-     * 1. Create MimeMessage (supports HTML, unlike SimpleMailMessage)
-     * 2. Set email headers (from, to, subject)
-     * 3. Build HTML email body with event details
-     * 4. Send via JavaMailSender
-     * 5. Log success/failure
-     * 6. Return boolean result
-     * 
-     * Why MimeMessage instead of SimpleMailMessage?
-     * - MimeMessage: Supports HTML, attachments, inline images
-     * - SimpleMailMessage: Plain text only
-     * - HTML emails look more professional and can include formatting
-     * 
-     * Error Handling:
-     * - Catches MessagingException (SMTP errors, invalid email, network issues)
-     * - Logs error with context (event ID, user ID, email)
-     * - Returns false on failure (caller can decide to retry or skip)
-     * 
-     * @param event The event to send reminder about
-     * @param user The attendee to send reminder to
-     * @return true if email sent successfully, false otherwise
-     */
     public boolean sendEventReminder(Event event, User user) {
         try {
-            // Step 1: Create MimeMessage
-            // MimeMessage = MIME (Multipurpose Internet Mail Extensions) message
-            // Supports HTML, attachments, headers, etc.
-            MimeMessage message = mailSender.createMimeMessage();
+            log.info("[EmailService] INFO - Starting sendEventReminder() to: {} for event: {}", user.getEmail(), event.getTitle());
             
-            // Step 2: Create MimeMessageHelper
-            // Helper simplifies setting message properties
-            // Parameters:
-            // - message: The MimeMessage to configure
-            // - true: Enable multipart mode (allows HTML + attachments)
-            // - "UTF-8": Character encoding (supports international characters)
+            MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            // Step 3: Set email headers
-            
-            // From: Who is sending this email?
-            // Format: "Display Name <email@domain.com>"
             helper.setFrom(fromEmail, fromName);
-            
-            // To: Who is receiving this email?
-            // Uses user.getEmail() from User entity
             helper.setTo(user.getEmail());
+            helper.setReplyTo(fromEmail);
+            helper.setSubject("Reminder: " + event.getTitle());
             
-            // Subject: Email subject line
-            // Format: "Event Reminder: {event name}"
-            // Example: "Event Reminder: Annual Tech Conference 2026"
-            helper.setSubject("Event Reminder: " + event.getTitle());
+            message.setHeader("X-Priority", "3");
+            message.setHeader("X-Mailer", "EventManagementSystem");
 
-            // Step 4: Build HTML email body
-            // Why HTML?
-            // - Better formatting (bold, colors, spacing)
-            // - Professional appearance
-            // - Better readability
             String emailBody = buildEmailBody(event, user);
-            
-            // Set email body with HTML enabled
-            // Parameters:
-            // - emailBody: The HTML content
-            // - true: Treat as HTML (false would be plain text)
             helper.setText(emailBody, true);
 
-            // Step 5: Send the email
-            // JavaMailSender connects to SMTP server and sends
-            // This is a blocking call (waits for SMTP response)
-            // Typical time: 1-3 seconds
+            log.debug("[EmailService] DEBUG - Attempting to send event reminder email message...");
             mailSender.send(message);
 
-            // Step 6: Log success
-            // Uses our ApplicationLoggerService for consistent logging
-            // Logs at INFO level with context (event ID, user ID, email)
-            logger.infoWithContext(
-                "EmailService",
-                "sendEventReminder",
-                String.format("Event reminder sent successfully to %s for event '%s'", 
-                    user.getEmail(), event.getTitle()),
-                "eventId", event.getId(),
-                "userId", user.getId(),
-                "email", user.getEmail()
-            );
+            log.info("[EmailService] INFO - sendEventReminder() - Event reminder sent successfully to " + user.getEmail() + " for event '" + event.getTitle() + "' (eventId=" + event.getId() + ", userId=" + user.getId() + ", email=" + user.getEmail() + ")");
 
-            return true; // Success!
+            return true;
 
         } catch (MessagingException e) {
-            // MessagingException: Email sending failed
-            // Possible causes:
-            // - Invalid email address
-            // - SMTP server down/unreachable
-            // - Authentication failed
-            // - Network timeout
-            // - Mailbox full
-            
-            // Log error with full context
-            logger.errorWithContext(
-                "EmailService",
-                "sendEventReminder - MessagingException for event: " + event.getTitle(),
-                e
-            );
-
-            return false; // Failure - caller can decide to retry or skip
+            log.error("[EmailService] ERROR - sendEventReminder() - MessagingException for user {}: {}", user.getEmail(), e.getMessage());
+            log.error("[EmailService] ERROR - Exception details:", e);
+            return false;
 
         } catch (Exception e) {
-            // Catch any other unexpected errors
-            // Examples: NullPointerException, encoding errors, etc.
-            logger.errorWithContext(
-                "EmailService",
-                "sendEventReminder - Unexpected error for user: " + user.getEmail(),
-                e
-            );
-
+            log.error("[EmailService] ERROR - sendEventReminder() - Unexpected error for user: " + user.getEmail() + ": " + e.getMessage());
+            log.error("[EmailService] ERROR - Exception details:", e);
             return false;
         }
     }
 
-    /**
-     * Build HTML email body with event details.
-     * 
-     * Creates a professional, well-formatted HTML email with:
-     * - Greeting with user's name
-     * - Event details (name, date, location, description)
-     * - Call-to-action
-     * - Footer
-     * 
-     * HTML Structure:
-     * - Inline CSS for maximum email client compatibility
-     * - Responsive design (works on mobile and desktop)
-     * - Professional color scheme
-     * 
-     * Why inline CSS?
-     * - Many email clients (Gmail, Outlook) strip <style> tags
-     * - Inline styles are more reliable across email clients
-     * 
-     * @param event The event details
-     * @param user The recipient user
-     * @return HTML string for email body
-     */
     private String buildEmailBody(Event event, User user) {
-        // Format event start time
-        // Example: "January 15, 2026 at 02:30 PM"
         String eventDateTime = event.getStartTime().format(DATE_FORMATTER);
 
-        // Build HTML with StringBuilder for efficiency
-        // StringBuilder is mutable (unlike String concatenation)
-        // Better performance when building large strings
         StringBuilder body = new StringBuilder();
         
         body.append("<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>");
-        
-        // Greeting
         body.append("<h2 style='color: #2c3e50;'>Hello ").append(user.getFullName()).append(",</h2>");
-        
-        // Reminder message
         body.append("<p>This is a friendly reminder that you have an upcoming event:</p>");
-        
-        // Event details box with background color
         body.append("<div style='background-color: #f8f9fa; padding: 20px; border-left: 4px solid #3498db; margin: 20px 0;'>");
-        
-        // Event name
         body.append("<h3 style='color: #3498db; margin-top: 0;'>").append(event.getTitle()).append("</h3>");
-        
-        // Event date/time with icon emoji
         body.append("<p><strong>📅 Date & Time:</strong> ").append(eventDateTime).append("</p>");
         
-        // Event location with icon emoji (if location exists)
         if (event.getLocation() != null && !event.getLocation().isEmpty()) {
             body.append("<p><strong>📍 Location:</strong> ").append(event.getLocation()).append("</p>");
         }
         
-        // Event description (if exists)
         if (event.getDescription() != null && !event.getDescription().isEmpty()) {
             body.append("<p><strong>ℹ️ Description:</strong><br>").append(event.getDescription()).append("</p>");
         }
         
         body.append("</div>");
-        
-        // Call to action
         body.append("<p>We look forward to seeing you there! If you have any questions, please don't hesitate to reach out.</p>");
-        
-        // Footer
         body.append("<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>");
         body.append("<p style='color: #7f8c8d; font-size: 12px;'>This is an automated reminder from Event Management System. Please do not reply to this email.</p>");
-        
         body.append("</body></html>");
         
         return body.toString();
     }
 
-    /**
-     * Send email verification link to user
-     * Called when user registers or requests new verification email
-     * 
-     * @param user User who needs to verify email
-     * @param verificationToken UUID token for verification
-     * @return true if email sent successfully, false otherwise
-     */
+    public boolean sendInvitationEmail(Event event, String recipientEmail, String invitationToken) {
+        try {
+            log.info("[EmailService] INFO - Starting sendInvitationEmail() to: {} for event: {}", recipientEmail, event.getTitle());
+            
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(recipientEmail);
+            helper.setReplyTo(fromEmail);
+            helper.setSubject("You're Invited: " + event.getTitle());
+            
+           
+            message.setHeader("X-Priority", "3");
+            message.setHeader("X-Mailer", "EventManagementSystem");
+
+            String emailBody = buildInvitationEmailBody(event, invitationToken);
+            helper.setText(emailBody, true);
+
+            log.debug("[EmailService] DEBUG - Message ready, attempting to send invitation email to: {}", recipientEmail);
+            try {
+                mailSender.send(message);
+                log.info("[EmailService] INFO - sendInvitationEmail() - Invitation sent successfully to " + recipientEmail + " for event '" + event.getTitle() + "' (eventId=" + event.getId() + ", token=" + invitationToken + ")");
+                return true;
+            } catch (Exception sendError) {
+                log.error("[EmailService] ERROR - SMTP send failed for {}: {}", recipientEmail, sendError.getMessage());
+                log.error("[EmailService] ERROR - Send error stacktrace: ", sendError);
+                return false;
+            }
+
+        } catch (MessagingException e) {
+            log.error("[EmailService] ERROR - sendInvitationEmail() - MessagingException for recipient {}: {}", recipientEmail, e.getMessage());
+            log.error("[EmailService] ERROR - MessagingException cause: {}", e.getCause());
+            log.error("[EmailService] ERROR - Exception details: ", e);
+            return false;
+
+        } catch (Exception e) {
+            log.error("[EmailService] ERROR - sendInvitationEmail() - Unexpected error for recipient: " + recipientEmail + ": " + e.getMessage());
+            log.error("[EmailService] ERROR - Exception details: ", e);
+            return false;
+        }
+    }
+
+    private String buildInvitationEmailBody(Event event, String invitationToken) {
+        String eventDateTime = event.getStartTime().format(DATE_FORMATTER);
+        String acceptUrl = baseUrl + "/api/events/respond?token=" + invitationToken + "&action=ACCEPT";
+        String declineUrl = baseUrl + "/api/events/respond?token=" + invitationToken + "&action=DECLINE";
+
+        StringBuilder body = new StringBuilder();
+        
+        body.append("<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>");
+        body.append("<h2 style='color: #2c3e50;'>You're Invited to an Event!</h2>");
+        body.append("<p>You have been invited to attend the following event:</p>");
+        body.append("<div style='background-color: #f8f9fa; padding: 20px; border-left: 4px solid #3498db; margin: 20px 0;'>");
+        body.append("<h3 style='color: #3498db; margin-top: 0;'>").append(event.getTitle()).append("</h3>");
+        body.append("<p><strong>📅 Date & Time:</strong> ").append(eventDateTime).append("</p>");
+        
+        if (event.getLocation() != null && !event.getLocation().isEmpty()) {
+            body.append("<p><strong>📍 Location:</strong> ").append(event.getLocation()).append("</p>");
+        }
+        
+        if (event.getDescription() != null && !event.getDescription().isEmpty()) {
+            body.append("<p><strong>ℹ️ Description:</strong><br>").append(event.getDescription()).append("</p>");
+        }
+        
+        body.append("<p><strong>👤 Organizer:</strong> ").append(event.getOrganizer().getFullName()).append("</p>");
+        body.append("</div>");
+        
+        body.append("<p style='font-size: 16px; margin: 30px 0;'>Will you be attending?</p>");
+        
+        body.append("<div style='text-align: center; margin: 30px 0;'>");
+        body.append("<a href='").append(acceptUrl).append("' style='display: inline-block; padding: 12px 30px; margin: 0 10px; background-color: #27ae60; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;'>✓ Accept</a>");
+        body.append("<a href='").append(declineUrl).append("' style='display: inline-block; padding: 12px 30px; margin: 0 10px; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;'>✗ Decline</a>");
+        body.append("</div>");
+        
+        body.append("<p style='color: #7f8c8d; font-size: 14px; margin-top: 40px;'>Please respond as soon as possible so the organizer can plan accordingly.</p>");
+        body.append("<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>");
+        body.append("<p style='color: #7f8c8d; font-size: 12px;'>This is an automated invitation from Event Management System. Please do not reply to this email.</p>");
+        body.append("</body></html>");
+        
+        return body.toString();
+    }
+
+    public boolean sendInvitationResponseConfirmation(Event event, String recipientEmail, boolean accepted) {
+        try {
+            log.info("[EmailService] INFO - Starting sendInvitationResponseConfirmation() to: {} for event: {}, accepted: {}", 
+                     recipientEmail, event.getTitle(), accepted);
+            
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(recipientEmail);
+            helper.setReplyTo(fromEmail);
+            
+            String subject = accepted 
+                ? "Confirmed: " + event.getTitle() 
+                : "Declined: " + event.getTitle();
+            helper.setSubject(subject);
+            
+           
+            message.setHeader("X-Priority", "3");
+            message.setHeader("X-Mailer", "EventManagementSystem");
+
+            String emailBody = buildResponseConfirmationEmailBody(event, accepted);
+            helper.setText(emailBody, true);
+
+            log.debug("[EmailService] DEBUG - Attempting to send response confirmation email...");
+            try {
+                mailSender.send(message);
+                log.info("[EmailService] INFO - sendInvitationResponseConfirmation() - Response confirmation sent to " + recipientEmail + " for event '" + event.getTitle() + "' (eventId=" + event.getId() + ", accepted=" + accepted + ")");
+                return true;
+            } catch (Exception sendError) {
+                log.error("[EmailService] ERROR - SMTP send failed for {}: {}", recipientEmail, sendError.getMessage());
+                log.error("[EmailService] ERROR - Send error stacktrace: ", sendError);
+                return false;
+            }
+
+        } catch (MessagingException e) {
+            log.error("[EmailService] ERROR - sendInvitationResponseConfirmation() - MessagingException for recipient {}: {}", 
+                     recipientEmail, e.getMessage());
+            log.error("[EmailService] ERROR - Exception details:", e);
+            return false;
+
+        } catch (Exception e) {
+            log.error("[EmailService] ERROR - sendInvitationResponseConfirmation() - Unexpected error for recipient: {}: {}", 
+                     recipientEmail, e.getMessage());
+            log.error("[EmailService] ERROR - Exception details:", e);
+            return false;
+        }
+    }
+
+    private String buildResponseConfirmationEmailBody(Event event, boolean accepted) {
+        String eventDateTime = event.getStartTime().format(DATE_FORMATTER);
+
+        StringBuilder body = new StringBuilder();
+        
+        body.append("<html><body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>");
+        
+        if (accepted) {
+            body.append("<h2 style='color: #27ae60;'>✓ You're Attending!</h2>");
+            body.append("<p>Thank you for accepting the invitation. We're excited to see you at:</p>");
+        } else {
+            body.append("<h2 style='color: #e74c3c;'>Invitation Declined</h2>");
+            body.append("<p>We've recorded that you won't be able to attend:</p>");
+        }
+        
+        body.append("<div style='background-color: #f8f9fa; padding: 20px; border-left: 4px solid ").append(accepted ? "#27ae60" : "#e74c3c").append("; margin: 20px 0;'>");
+        body.append("<h3 style='color: ").append(accepted ? "#27ae60" : "#e74c3c").append("; margin-top: 0;'>").append(event.getTitle()).append("</h3>");
+        body.append("<p><strong>📅 Date & Time:</strong> ").append(eventDateTime).append("</p>");
+        
+        if (event.getLocation() != null && !event.getLocation().isEmpty()) {
+            body.append("<p><strong>📍 Location:</strong> ").append(event.getLocation()).append("</p>");
+        }
+        
+        if (event.getOrganizer() != null) {
+            body.append("<p><strong>👤 Organizer:</strong> ").append(event.getOrganizer().getFullName()).append("</p>");
+        }
+        
+        body.append("</div>");
+        
+        if (accepted) {
+            body.append("<p>You will receive a reminder before the event starts. If you have any questions, please contact the organizer.</p>");
+        } else {
+            body.append("<p>The organizer has been notified of your response. If you change your mind, please contact the organizer directly.</p>");
+        }
+        
+        body.append("<hr style='border: none; border-top: 1px solid #eee; margin: 30px 0;'>");
+        body.append("<p style='color: #7f8c8d; font-size: 12px;'>This is an automated confirmation from Event Management System. Please do not reply to this email.</p>");
+        body.append("</body></html>");
+        
+        return body.toString();
+    }
+
+    
+    public boolean sendAutoAccountCredentials(String email, String fullName, String tempPassword) {
+        try {
+            log.info("[EmailService] INFO - sendAutoAccountCredentials() - Starting to send credentials email to: {}", email);
+            log.debug("[EmailService] DEBUG - Email from: {}, Mail host: smtp.gmail.com", fromEmail);
+            
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(email);
+            helper.setReplyTo(fromEmail);
+            helper.setSubject("Your Event Management Account Has Been Created");
+            
+            message.setHeader("X-Priority", "3");
+            message.setHeader("X-Mailer", "EventManagementSystem");
+
+            StringBuilder body = new StringBuilder();
+            body.append("<html><body style=\"font-family: Arial, sans-serif; line-height: 1.6;\">");
+            body.append("<h2>Welcome to Event Management System!</h2>");
+            body.append("<p>Dear ").append(fullName).append(",</p>");
+            body.append("<p>An account has been automatically created for you based on your event invitation acceptance.</p>");
+            body.append("<h3>Your Account Credentials:</h3>");
+            body.append("<table style=\"border-collapse: collapse;\">");
+            body.append("<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Email:</strong></td><td style=\"padding: 8px; border: 1px solid #ddd;\">").append(email).append("</td></tr>");
+            body.append("<tr><td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Temporary Password:</strong></td><td style=\"padding: 8px; border: 1px solid #ddd;\"><code style=\"background-color: #f0f0f0; padding: 5px;\">").append(tempPassword).append("</code></td></tr>");
+            body.append("</table>");
+            body.append("<p><strong>Important:</strong> Please change your password on first login for security.</p>");
+            body.append("<p><a href=\"").append(baseUrl).append("/login\" style=\"display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;\">Login Here</a></p>");
+            body.append("<p>If you did not expect this email or have any questions, please contact support.</p>");
+            body.append("<p>Best regards,<br>Event Management System</p>");
+            body.append("</body></html>");
+
+            helper.setText(body.toString(), true);
+            
+            log.debug("[EmailService] DEBUG - Attempting to send email message...");
+            try {
+                mailSender.send(message);
+                log.info("[EmailService] INFO - Auto account credentials email successfully sent to: {} with login link: {}/login", 
+                         email, baseUrl);
+                return true;
+            } catch (Exception sendError) {
+                log.error("[EmailService] ERROR - SMTP send failed for {}: {}", email, sendError.getMessage());
+                log.error("[EmailService] ERROR - Send error stacktrace: ", sendError);
+                return false;
+            }
+
+        } catch (MessagingException e) {
+            log.error("[EmailService] ERROR - MessagingException failed to send auto account credentials to {}: {}", 
+                     email, e.getMessage());
+            log.error("[EmailService] ERROR - Exception cause: {}", e.getCause());
+            e.printStackTrace();
+            log.error("[EmailService] ERROR - Full stack trace: ", e);
+            return false;
+        } catch (Exception e) {
+            log.error("[EmailService] ERROR - Unexpected exception sending auto account credentials to {}: {}", 
+                     email, e.getMessage());
+            e.printStackTrace();
+            log.error("[EmailService] ERROR - Full stack trace: ", e);
+            return false;
+        }
+    }
+
+  
+    public boolean sendWithRetry(java.util.function.Supplier<Boolean> emailSendTask, String recipientEmail, int maxAttempts) {
+        int attempt = 1;
+        long delayMs = 1000; 
+        
+        while (attempt <= maxAttempts) {
+            try {
+                log.debug("[EmailService] DEBUG - Attempt {}/{} to send email to: {}", attempt, maxAttempts, recipientEmail);
+                
+                if (emailSendTask.get()) {
+                    log.info("[EmailService] INFO - Email sent successfully to {} on attempt {}", recipientEmail, attempt);
+                    return true;
+                }
+                
+                if (attempt >= maxAttempts) {
+                    log.error("[EmailService] ERROR - Failed to send email to {} after {} attempts", recipientEmail, maxAttempts);
+                    return false;
+                }
+                
+                log.warn("[EmailService] WARN - Send failed for {}, retrying in {}ms (attempt {}/{})", 
+                        recipientEmail, delayMs, attempt, maxAttempts);
+                Thread.sleep(delayMs);
+                delayMs *= 2; 
+                attempt++;
+                
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("[EmailService] ERROR - Retry interrupted for {}: {}", recipientEmail, e.getMessage());
+                return false;
+            } catch (Exception e) {
+                log.error("[EmailService] ERROR - Unexpected error during retry for {}: {}", recipientEmail, e.getMessage());
+                if (attempt >= maxAttempts) {
+                    return false;
+                }
+                attempt++;
+            }
+        }
+        
+        return false;
+    }
+
+    
+    public boolean sendWithRetry(java.util.function.Supplier<Boolean> emailSendTask, String recipientEmail) {
+        return sendWithRetry(emailSendTask, recipientEmail, 3);
+    }
 }
+
+
 

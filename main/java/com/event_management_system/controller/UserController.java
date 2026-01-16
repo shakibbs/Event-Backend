@@ -36,7 +36,7 @@ public class UserController {
     private UserService userService;
     
     @Autowired
-    private ApplicationLoggerService logger;
+    private ApplicationLoggerService log;
 
     @PostMapping
     @Operation(summary = "Create a new user", description = "Creates a new user with provided details")
@@ -44,13 +44,13 @@ public class UserController {
             @Valid @RequestBody @NonNull UserRequestDTO userRequestDTO) {
         
         try {
-            logger.traceWithContext("UserController", "createUser() called with email={}, fullName={}", userRequestDTO.getEmail(), userRequestDTO.getFullName());
-            logger.debugWithContext("UserController", "POST /api/users - Creating user: email={}, fullName={}", userRequestDTO.getEmail(), userRequestDTO.getFullName());
+            log.trace("[UserController] TRACE - createUser() called with email=" + userRequestDTO.getEmail() + ", fullName=" + userRequestDTO.getFullName());
+            log.debug("[UserController] DEBUG - createUser() - POST /api/users - Creating user: email=" + userRequestDTO.getEmail() + ", fullName=" + userRequestDTO.getFullName());
             UserResponseDTO createdUser = userService.createUser(userRequestDTO);
-            logger.infoWithContext("UserController", "User created successfully: userId={}, email={}, fullName={}", createdUser.getId(), createdUser.getEmail(), createdUser.getFullName());
+            log.info("[UserController] INFO - createUser() - User created successfully: userId=" + createdUser.getId() + ", email=" + createdUser.getEmail() + ", fullName=" + createdUser.getFullName());
             return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.errorWithContext("UserController", "Failed to create user: email={}", e);
+            log.error("[UserController] ERROR - createUser() - Failed to create user: email=" + userRequestDTO.getEmail(), e);
             throw e;
         }
     }
@@ -91,24 +91,24 @@ public class UserController {
             Authentication authentication) {
         
         try {
-            logger.traceWithContext("UserController", "updateUser() called with userId={}, email={}", userId, userRequestDTO.getEmail());
-            logger.debugWithContext("UserController", "PUT /api/users/{} - Updating user: email={}", userId, userRequestDTO.getEmail());
+            log.trace("[UserController] TRACE - updateUser() called with userId=" + userId + ", email=" + userRequestDTO.getEmail());
+            log.debug("[UserController] DEBUG - updateUser() - PUT /api/users/" + userId + " - Updating user: email=" + userRequestDTO.getEmail());
             User currentUser = (User) authentication.getPrincipal();
-            logger.debugWithContext("UserController", "User authenticated: userId={}", currentUser.getId());
+            log.debug("[UserController] DEBUG - updateUser() - User authenticated: userId=" + currentUser.getId());
             var result = userService.updateUser(currentUser.getId(), userId, userRequestDTO);
            
             if (result.isPresent()) {
-                logger.infoWithContext("UserController", "User updated successfully: userId={}, email={}", userId, result.get().getEmail());
+                log.info("[UserController] INFO - updateUser() - User updated successfully: userId=" + userId + ", email=" + result.get().getEmail());
                 return new ResponseEntity<>(result.get(), HttpStatus.OK);
             } else {
-                logger.warnWithContext("UserController", "User not found for update: userId={}, requestedBy={}", userId, currentUser.getId());
+                log.warn("[UserController] WARN - updateUser() - User not found for update: userId=" + userId + ", requestedBy=" + currentUser.getId());
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (RuntimeException e) {
-            logger.warnWithContext("UserController", "Access denied for user update: userId={}, error={}", userId, e.getMessage());
+            log.warn("[UserController] WARN - updateUser() - Access denied for user update: userId=" + userId + ", error=" + e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (Exception e) {
-            logger.errorWithContext("UserController", "Failed to update user: userId={}", e);
+            log.error("[UserController] ERROR - updateUser() - Failed to update user: userId=" + userId, e);
             throw e;
         }
     }
@@ -120,24 +120,24 @@ public class UserController {
             Authentication authentication) {
         
         try {
-            logger.traceWithContext("UserController", "deleteUser() called with userId={}, timestamp={}", userId, System.currentTimeMillis());
-            logger.debugWithContext("UserController", "DELETE /api/users/{} - Deleting user", userId);
+            log.trace("[UserController] TRACE - deleteUser() called with userId=" + userId + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[UserController] DEBUG - deleteUser() - DELETE /api/users/" + userId + " - Deleting user");
             User currentUser = (User) authentication.getPrincipal();
-            logger.debugWithContext("UserController", "User authenticated: userId={}", currentUser.getId());
+            log.debug("[UserController] DEBUG - deleteUser() - User authenticated: userId=" + currentUser.getId());
             boolean deleted = userService.deleteUser(currentUser.getId(), userId);
            
             if (deleted) {
-                logger.infoWithContext("UserController", "User deleted successfully: userId={}, deletedBy={}", userId, currentUser.getId());
+                log.info("[UserController] INFO - deleteUser() - User deleted successfully: userId=" + userId + ", deletedBy=" + currentUser.getId());
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
-                logger.warnWithContext("UserController", "User not found for deletion: userId={}, deletedBy={}", userId, currentUser.getId());
+                log.warn("[UserController] WARN - deleteUser() - User not found for deletion: userId=" + userId + ", deletedBy=" + currentUser.getId());
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (RuntimeException e) {
-            logger.warnWithContext("UserController", "Access denied for user deletion: userId={}, error={}", userId, e.getMessage());
+            log.warn("[UserController] WARN - deleteUser() - Access denied for user deletion: userId=" + userId + ", error=" + e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (Exception e) {
-            logger.errorWithContext("UserController", "Failed to delete user: userId={}", e);
+            log.error("[UserController] ERROR - deleteUser() - Failed to delete user: userId=" + userId, e);
             throw e;
         }
     }
@@ -149,13 +149,13 @@ public class UserController {
             @Parameter(description = "ID of role to assign") @PathVariable @NonNull Long roleId) {
         
         try {
-            logger.traceWithContext("UserController", "addRoleToUser() called with userId={}, roleId={}, timestamp={}", userId, roleId, System.currentTimeMillis());
-            logger.debugWithContext("UserController", "POST /api/users/{}/roles/{} - Adding role to user", userId, roleId);
+            log.trace("[UserController] TRACE - addRoleToUser() called with userId=" + userId + ", roleId=" + roleId + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[UserController] DEBUG - addRoleToUser() - POST /api/users/" + userId + "/roles/" + roleId + " - Adding role to user");
             userService.assignRoleToUser(userId, roleId);
-            logger.infoWithContext("UserController", "Role added to user successfully: userId={}, roleId={}", userId, roleId);
+            log.info("[UserController] INFO - addRoleToUser() - Role added to user successfully: userId=" + userId + ", roleId=" + roleId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            logger.errorWithContext("UserController", "Failed to add role to user: userId={}, roleId={}", e);
+            log.error("[UserController] ERROR - addRoleToUser() - Failed to add role to user: userId=" + userId + ", roleId=" + roleId, e);
             throw e;
         }
     }
@@ -167,13 +167,13 @@ public class UserController {
             @Parameter(description = "ID of role to remove") @PathVariable @NonNull Long roleId) {
         
         try {
-            logger.traceWithContext("UserController", "removeRoleFromUser() called with userId={}, roleId={}, timestamp={}", userId, roleId, System.currentTimeMillis());
-            logger.debugWithContext("UserController", "DELETE /api/users/{}/roles/{} - Removing role from user", userId, roleId);
+            log.trace("[UserController] TRACE - removeRoleFromUser() called with userId=" + userId + ", roleId=" + roleId + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[UserController] DEBUG - removeRoleFromUser() - DELETE /api/users/" + userId + "/roles/" + roleId + " - Removing role from user");
             userService.removeRoleFromUser(userId, roleId);
-            logger.infoWithContext("UserController", "Role removed from user successfully: userId={}, roleId={}", userId, roleId);
+            log.info("[UserController] INFO - removeRoleFromUser() - Role removed from user successfully: userId=" + userId + ", roleId=" + roleId);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            logger.errorWithContext("UserController", "Failed to remove role from user: userId={}, roleId={}", e);
+            log.error("[UserController] ERROR - removeRoleFromUser() - Failed to remove role from user: userId=" + userId + ", roleId=" + roleId, e);
             throw e;
         }
     }

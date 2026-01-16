@@ -1,17 +1,14 @@
 package com.event_management_system.entity;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,7 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "app_events")
+@Table(name = "events")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,18 +27,41 @@ public class Event extends BaseEntity {
 
     public enum Visibility {
         PUBLIC("Public"),
-        PRIVATE("Private"),
-        INVITE_ONLY("Invite Only");
-        
+        PRIVATE("Private");
+
         private final String displayName;
-        
+
         Visibility(String displayName) {
             this.displayName = displayName;
         }
-        
+
         public String getDisplayName() {
             return displayName;
         }
+    }
+
+    public enum ApprovalStatus {
+        PENDING("Pending"),
+        APPROVED("Approved"),
+        REJECTED("Rejected");
+
+        private final String displayName;
+
+        ApprovalStatus(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
+    public enum EventStatus {
+        UPCOMING,
+        INACTIVE,
+        ONGOING,
+        COMPLETED,
+        CANCELLED;
     }
 
     @NotBlank(message = "Event title is required")
@@ -71,13 +91,66 @@ public class Event extends BaseEntity {
     @JoinColumn(name = "organizer_id", nullable = false)
     private User organizer;
 
-    @ManyToMany
-    @JoinTable(
-        name = "event_attendees",
-        joinColumns = @JoinColumn(name = "event_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> attendees = new HashSet<>();
+    @Enumerated(EnumType.STRING)
+    @Column(name = "approval_status", nullable = false, length = 20)
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
+
+    @ManyToOne
+    @JoinColumn(name = "approved_by")
+    private User approvedBy;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "remarks", columnDefinition = "TEXT")
+    private String remarks;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "event_status", nullable = false, length = 20)
+    private EventStatus eventStatus = EventStatus.UPCOMING;
+
+    @PrePersist
+    protected void onCreate() {
+        if (approvalStatus == null) {
+            approvalStatus = ApprovalStatus.PENDING;
+        }
+    }
+
+    public EventStatus getCurrentEventStatus() {
+        if (this.eventStatus == EventStatus.INACTIVE || this.eventStatus == EventStatus.CANCELLED) {
+            return this.eventStatus;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.isBefore(this.startTime)) {
+            return EventStatus.UPCOMING;
+        } else if (now.isAfter(this.endTime)) {
+            return EventStatus.COMPLETED;
+        } else {
+            return EventStatus.ONGOING;
+        }
+    }
+
+    public void hold() {
+        this.eventStatus = EventStatus.INACTIVE;
+    }
+
+    public void cancel() {
+        this.eventStatus = EventStatus.CANCELLED;
+    }
+
+    public void reactivate() {
+        this.eventStatus = EventStatus.UPCOMING;
+    }
+
+    public boolean isHoldable() {
+        return this.eventStatus == EventStatus.UPCOMING;
+    }
+
+    public boolean isReactivatable() {
+        return this.eventStatus == EventStatus.INACTIVE;
+    }
 
     public String getName() {
         return this.title;

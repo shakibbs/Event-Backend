@@ -39,7 +39,7 @@ public class PermissionController {
     private PermissionService permissionService;
     
     @Autowired
-    private ApplicationLoggerService logger;
+    private ApplicationLoggerService log;
 
     @PostMapping
     @Operation(summary = "Create a new permission", description = "Creates a new permission with provided details")
@@ -54,13 +54,13 @@ public class PermissionController {
             @Valid @RequestBody @NonNull PermissionRequestDTO permissionRequestDTO) {
         
         try {
-            logger.traceWithContext("PermissionController", "createPermission() called with name={}, timestamp={}", permissionRequestDTO.getName(), System.currentTimeMillis());
-            logger.debugWithContext("PermissionController", "POST /api/permissions - Creating permission: name={}, description={}", permissionRequestDTO.getName(), permissionRequestDTO.getDescription());
+            log.trace("[PermissionController] TRACE - createPermission() called with name=" + permissionRequestDTO.getName() + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[PermissionController] DEBUG - createPermission() - POST /api/permissions - Creating permission: name=" + permissionRequestDTO.getName() + ", description=" + permissionRequestDTO.getDescription());
             PermissionResponseDTO savedPermission = permissionService.createPermission(permissionRequestDTO);
-            logger.infoWithContext("PermissionController", "Permission created successfully: permissionId={}, name={}", savedPermission.getId(), savedPermission.getName());
+            log.info("[PermissionController] INFO - createPermission() - Permission created successfully: permissionId=" + savedPermission.getId() + ", name=" + savedPermission.getName());
             return ResponseEntity.status(HttpStatus.CREATED).body(savedPermission);
         } catch (Exception e) {
-            logger.errorWithContext("PermissionController", "Failed to create permission: name={}", e);
+            log.error("[PermissionController] ERROR - createPermission() - Failed to create permission: name=" + permissionRequestDTO.getName(), e);
             throw e;
         }
     }
@@ -112,19 +112,19 @@ public class PermissionController {
             @Valid @RequestBody @NonNull PermissionRequestDTO permissionDetails) {
         
         try {
-            logger.traceWithContext("PermissionController", "updatePermission() called with permissionId={}, name={}", id, permissionDetails.getName());
-            logger.debugWithContext("PermissionController", "PUT /api/permissions/{} - Updating permission: name={}", id, permissionDetails.getName());
+            log.trace("[PermissionController] TRACE - updatePermission() called with permissionId=" + id + ", name=" + permissionDetails.getName());
+            log.debug("[PermissionController] DEBUG - updatePermission() - PUT /api/permissions/" + id + " - Updating permission: name=" + permissionDetails.getName());
             Optional<PermissionResponseDTO> permissionOptional = permissionService.updatePermission(id, permissionDetails);
             
             if (permissionOptional.isPresent()) {
-                logger.infoWithContext("PermissionController", "Permission updated successfully: permissionId={}, name={}", id, permissionOptional.get().getName());
+                log.info("[PermissionController] INFO - updatePermission() - Permission updated successfully: permissionId=" + id + ", name=" + permissionOptional.get().getName());
                 return ResponseEntity.ok(permissionOptional.get());
             } else {
-                logger.warnWithContext("PermissionController", "Permission not found for update: permissionId={}", id);
+                log.warn("[PermissionController] WARN - updatePermission() - Permission not found for update: permissionId=" + id);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
         } catch (Exception e) {
-            logger.errorWithContext("PermissionController", "Failed to update permission: permissionId={}", e);
+            log.error("[PermissionController] ERROR - updatePermission() - Failed to update permission: permissionId=" + id, e);
             throw e;
         }
     }
@@ -141,19 +141,19 @@ public class PermissionController {
             @PathVariable @NonNull Long id) {
         
         try {
-            logger.traceWithContext("PermissionController", "deletePermission() called with permissionId={}, timestamp={}", id, System.currentTimeMillis());
-            logger.debugWithContext("PermissionController", "DELETE /api/permissions/{} - Deleting permission", id);
+            log.trace("[PermissionController] TRACE - deletePermission() called with permissionId=" + id + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[PermissionController] DEBUG - deletePermission() - DELETE /api/permissions/" + id + " - Deleting permission");
             boolean deleted = permissionService.deletePermission(id);
             
             if (deleted) {
-                logger.infoWithContext("PermissionController", "Permission deleted successfully: permissionId={}", id);
+                log.info("[PermissionController] INFO - deletePermission() - Permission deleted successfully: permissionId=" + id);
                 return ResponseEntity.ok().build();
             } else {
-                logger.warnWithContext("PermissionController", "Permission not found for deletion: permissionId={}", id);
+                log.warn("[PermissionController] WARN - deletePermission() - Permission not found for deletion: permissionId=" + id);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
         } catch (Exception e) {
-            logger.errorWithContext("PermissionController", "Failed to delete permission: permissionId={}", e);
+            log.error("[PermissionController] ERROR - deletePermission() - Failed to delete permission: permissionId=" + id, e);
             throw e;
         }
     }

@@ -11,10 +11,6 @@ public class ApplicationLoggerService {
 
     // ==================== TRACE LEVEL ====================
     
-    /**
-     * Log at TRACE level (most verbose)
-     * Use for: Variable values, detailed step-by-step execution
-     */
     public void trace(String message) {
         log.trace(message);
     }
@@ -25,10 +21,6 @@ public class ApplicationLoggerService {
 
     // ==================== DEBUG LEVEL ====================
     
-    /**
-     * Log at DEBUG level
-     * Use for: Technical details, method parameters, request data
-     */
     public void debug(String message) {
         log.debug(message);
     }
@@ -77,11 +69,7 @@ public class ApplicationLoggerService {
     }
 
     // ==================== CONTEXTUAL LOGGING ====================
-    
-    /**
-     * Log with context (controller/service name)
-     * Format: [ControllerName] message
-     */
+   
     public void debugWithContext(String context, String message, Object... args) {
         log.debug("[{}] {}", context, formatMessage(message, args));
     }
@@ -104,10 +92,6 @@ public class ApplicationLoggerService {
 
     // ==================== UTILITY METHODS ====================
     
-    /**
-     * Format parameterized message
-     * Replaces {} with arguments
-     */
     private String formatMessage(String message, Object... args) {
         if (args.length == 0) {
             return message;
@@ -118,24 +102,17 @@ public class ApplicationLoggerService {
         }
         return result;
     }
-    
-    /**
-     * Log method entry
-     */
+   
     public void methodEntry(String methodName) {
         log.debug("→ Entering {}", methodName);
     }
     
-    /**
-     * Log method exit
-     */
+    
     public void methodExit(String methodName) {
         log.debug("← Exiting {}", methodName);
     }
     
-    /**
-     * Log method exception
-     */
+ 
     public void methodException(String methodName, Exception exception) {
         log.error("✗ Exception in {}: {}", methodName, exception.getMessage(), exception);
     }

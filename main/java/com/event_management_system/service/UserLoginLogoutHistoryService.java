@@ -16,23 +16,7 @@ import com.event_management_system.entity.UserLoginLogoutHistory;
 import com.event_management_system.mapper.UserLoginLogoutHistoryMapper;
 import com.event_management_system.repository.UserLoginLogoutHistoryRepository;
 
-/**
- * UserLoginLogoutHistoryService
- * 
- * Manages login/logout session tracking
- * 
- * Key Functions:
- * - Record login events
- * - Record logout events
- * - Track active sessions
- * - Force logout sessions
- * - Get login history
- * 
- * Used by:
- * - AuthService (when user logs in/out)
- * - HistoryController (to show login history)
- * - SecurityController (to manage active sessions)
- */
+
 @Service
 public class UserLoginLogoutHistoryService {
     
@@ -42,21 +26,7 @@ public class UserLoginLogoutHistoryService {
     @Autowired
     private UserLoginLogoutHistoryMapper loginHistoryMapper;
     
-    /**
-     * Record a login event
-     * 
-     * Usage:
-     * userLoginLogoutHistoryService.recordLogin(
-     *     user, jwtToken, ipAddress, deviceInfo, "SUCCESS"
-     * );
-     * 
-     * @param user - The user who logged in
-     * @param userToken - JWT token for this session
-     * @param requestIp - Client IP address
-     * @param deviceInfo - Browser/device information
-     * @param loginStatus - "SUCCESS", "FAILED", "FORCE_LOGOUT"
-     * @return Saved UserLoginLogoutHistory entity
-     */
+    
     @Transactional
     public UserLoginLogoutHistory recordLogin(
             @NonNull User user,
@@ -92,16 +62,7 @@ public class UserLoginLogoutHistoryService {
                 .orElse(false);
     }
     
-    /**
-     * Get all login/logout history for a user
-     * 
-     * Usage:
-     * List<UserLoginLogoutHistoryResponseDTO> history = 
-     *     userLoginLogoutHistoryService.getLoginHistory(userId);
-     * 
-     * @param userId - User ID
-     * @return List of login/logout records (sorted newest first)
-     */
+    
     @Transactional(readOnly = true)
     public List<UserLoginLogoutHistoryResponseDTO> getLoginHistory(@NonNull Long userId) {
         List<UserLoginLogoutHistory> history = loginHistoryRepository.findByUserId(userId);
@@ -110,16 +71,7 @@ public class UserLoginLogoutHistoryService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * Get active sessions for a user (where logoutTime is NULL)
-     * 
-     * Usage:
-     * List<UserLoginLogoutHistoryResponseDTO> activeSessions = 
-     *     userLoginLogoutHistoryService.getActiveSessions(userId);
-     * 
-     * @param userId - User ID
-     * @return List of active sessions (not logged out yet)
-     */
+    
     @Transactional(readOnly = true)
     public List<UserLoginLogoutHistoryResponseDTO> getActiveSessions(@NonNull Long userId) {
         List<UserLoginLogoutHistory> activeSessions = 
@@ -130,34 +82,13 @@ public class UserLoginLogoutHistoryService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * Count active sessions for a user
-     * 
-     * Usage:
-     * long activeCount = userLoginLogoutHistoryService.countActiveSessions(userId);
-     * 
-     * @param userId - User ID
-     * @return Number of active sessions
-     */
+    
     @Transactional(readOnly = true)
     public long countActiveSessions(@NonNull Long userId) {
         return loginHistoryRepository.countByUserIdAndLogoutTimeIsNull(userId);
     }
     
-    /**
-     * Get login history within a date range
-     * 
-     * Usage:
-     * List<UserLoginLogoutHistoryResponseDTO> history = 
-     *     userLoginLogoutHistoryService.getLoginHistoryByDateRange(
-     *         userId, startDate, endDate
-     *     );
-     * 
-     * @param userId - User ID
-     * @param startDate - Start date
-     * @param endDate - End date
-     * @return List of login records within date range
-     */
+    
     @Transactional(readOnly = true)
     public List<UserLoginLogoutHistoryResponseDTO> getLoginHistoryByDateRange(
             @NonNull Long userId,
@@ -172,17 +103,6 @@ public class UserLoginLogoutHistoryService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * Get login history by status
-     * 
-     * Usage:
-     * List<UserLoginLogoutHistoryResponseDTO> failedLogins = 
-     *     userLoginLogoutHistoryService.getLoginHistoryByStatus(userId, "FAILED");
-     * 
-     * @param userId - User ID
-     * @param loginStatus - "SUCCESS", "FAILED", "FORCE_LOGOUT"
-     * @return List of login records with specified status
-     */
     @Transactional(readOnly = true)
     public List<UserLoginLogoutHistoryResponseDTO> getLoginHistoryByStatus(
             @NonNull Long userId,
@@ -196,16 +116,7 @@ public class UserLoginLogoutHistoryService {
                 .collect(Collectors.toList());
     }
     
-    /**
-     * Get the most recent login for a user
-     * 
-     * Usage:
-     * UserLoginLogoutHistoryResponseDTO lastLogin = 
-     *     userLoginLogoutHistoryService.getLastLogin(userId);
-     * 
-     * @param userId - User ID
-     * @return Most recent login record, or null if none
-     */
+   
     @Transactional(readOnly = true)
     public UserLoginLogoutHistoryResponseDTO getLastLogin(@NonNull Long userId) {
         return loginHistoryRepository.findFirstByUserIdOrderByLoginTimeDesc(userId)
@@ -213,17 +124,7 @@ public class UserLoginLogoutHistoryService {
                 .orElse(null);
     }
     
-    /**
-     * Force logout a session by token
-     * 
-     * Sets logout time to now and changes status to "FORCE_LOGOUT"
-     * 
-     * Usage:
-     * userLoginLogoutHistoryService.forceLogout(jwtToken);
-     * 
-     * @param userToken - JWT token for the session
-     * @return true if session found and logged out, false otherwise
-     */
+    
     @Transactional
     public boolean forceLogout(@NonNull String userToken) {
         return loginHistoryRepository.findByUserToken(userToken)

@@ -8,8 +8,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -49,10 +47,6 @@ public class RolePermission {
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, name = "status", length = 20)
-    private BaseEntity.Status status = BaseEntity.Status.ACTIVE;
-
     @Column(nullable = false, name = "deleted")
     private Boolean deleted = false;
 
@@ -61,14 +55,12 @@ public class RolePermission {
         this.permission = permission;
         this.id = new RolePermissionId(role.getId(), permission.getId());
         this.createdBy = "system";
-        this.status = BaseEntity.Status.ACTIVE;
         this.deleted = false;
         this.createdAt = LocalDateTime.now();
     }
 
     public void recordCreation(String user) {
         this.createdBy = user;
-        this.status = BaseEntity.Status.ACTIVE;
         this.deleted = false;
         this.createdAt = LocalDateTime.now();
     }

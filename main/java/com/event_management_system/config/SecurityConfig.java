@@ -57,10 +57,10 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/api-docs/**").permitAll()
                         
-                        // User registration endpoint
                         .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
                         
-                        // ALL OTHER ENDPOINTS - Require authentication
+                        .requestMatchers(HttpMethod.GET, "/api/events/respond").permitAll()
+                        
                         .anyRequest().authenticated()
                 )
                 

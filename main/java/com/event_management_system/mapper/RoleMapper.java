@@ -41,7 +41,6 @@ public class RoleMapper {
                         PermissionResponseDTO permissionDto = new PermissionResponseDTO();
                         permissionDto.setId(rp.getPermission().getId());
                         permissionDto.setName(rp.getPermission().getName());
-                        permissionDto.setStatus(rp.getPermission().getStatus() != null ? rp.getPermission().getStatus().toString() : null);
                         permissionDto.setCreatedAt(rp.getPermission().getCreatedAt());
                         permissionDto.setCreatedBy(rp.getPermission().getCreatedBy());
                         permissionDto.setUpdatedAt(rp.getPermission().getUpdatedAt());
@@ -59,7 +58,6 @@ public class RoleMapper {
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setUpdatedBy(entity.getUpdatedBy());
-        dto.setStatus(entity.getStatus());
         dto.setDeleted(entity.getDeleted());
         
         return dto;

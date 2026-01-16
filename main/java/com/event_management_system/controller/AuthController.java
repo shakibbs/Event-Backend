@@ -25,9 +25,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Authentication and authorization endpoints")
@@ -40,7 +38,7 @@ public class AuthController {
     private UserRepository userRepository;
     
     @Autowired
-    private ApplicationLoggerService logger;
+    private ApplicationLoggerService log;
 
     @PostMapping("/login")
     @Operation(
@@ -52,18 +50,18 @@ public class AuthController {
             jakarta.servlet.http.HttpServletRequest request) {
         
         try {
-            logger.traceWithContext("AuthController", "login() called with email={}, timestamp={}", loginRequest.getEmail(), System.currentTimeMillis());
-            logger.debugWithContext("AuthController", "POST /api/auth/login - Login attempt: email={}", loginRequest.getEmail());
+            log.trace("[AuthController] TRACE - login() called with email=" + loginRequest.getEmail() + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[AuthController] DEBUG - login() - POST /api/auth/login - Login attempt: email=" + loginRequest.getEmail());
             AuthResponseDTO authResponse = authService.authenticate(loginRequest, request);
-            logger.infoWithContext("AuthController", "Login successful: userId={}, email={}", authResponse.getUser().getId(), loginRequest.getEmail());
+            log.info("[AuthController] INFO - login() - Login successful: userId=" + authResponse.getUser().getId() + ", email=" + loginRequest.getEmail());
             
             return new ResponseEntity<>(authResponse, HttpStatus.OK);
             
         } catch (RuntimeException e) {
-            logger.warnWithContext("AuthController", "Login failed: Invalid credentials for email={}, error={}", loginRequest.getEmail(), e.getMessage());
+            log.warn("[AuthController] WARN - login() - Login failed: Invalid credentials for email=" + loginRequest.getEmail() + ", error=" + e.getMessage());
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
-            logger.errorWithContext("AuthController", "Failed to login: email={}", e);
+            log.error("[AuthController] ERROR - login() - Failed to login: email=" + loginRequest.getEmail() + ": " + e.getMessage());
             throw e;
         }
     }
@@ -77,18 +75,18 @@ public class AuthController {
             @Valid @RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
         
         try {
-            logger.traceWithContext("AuthController", "refreshAccessToken() called with timestamp={}", System.currentTimeMillis());
-            logger.debugWithContext("AuthController", "POST /api/auth/refresh - Refresh token request received");
+            log.trace("[AuthController] TRACE - refreshAccessToken() called with timestamp=" + System.currentTimeMillis());
+            log.debug("[AuthController] DEBUG - refreshAccessToken() - POST /api/auth/refresh - Refresh token request received");
             AuthResponseDTO authResponse = authService.refreshAccessToken(refreshTokenRequest.getRefreshToken());
-            logger.infoWithContext("AuthController", "Access token refreshed successfully: userId={}", authResponse.getUser().getId());
+            log.info("[AuthController] INFO - refreshAccessToken() - Access token refreshed successfully: userId=" + authResponse.getUser().getId());
             
             return new ResponseEntity<>(authResponse, HttpStatus.OK);
             
         } catch (RuntimeException e) {
-            logger.warnWithContext("AuthController", "Token refresh failed: Invalid or expired token, error={}", e.getMessage());
+            log.warn("[AuthController] WARN - refreshAccessToken() - Token refresh failed: Invalid or expired token, error=" + e.getMessage());
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
-            logger.errorWithContext("AuthController", "Failed to refresh access token", e);
+            log.error("[AuthController] ERROR - refreshAccessToken() - Failed to refresh access token: " + e.getMessage());
             throw e;
         }
     }
@@ -104,17 +102,17 @@ public class AuthController {
             jakarta.servlet.http.HttpServletRequest request) {
         
         try {
-            logger.traceWithContext("AuthController", "logout() called with timestamp={}", System.currentTimeMillis());
-            logger.debugWithContext("AuthController", "POST /api/auth/logout - Logout request received");
+            log.trace("[AuthController] TRACE - logout() called with timestamp=" + System.currentTimeMillis());
+            log.debug("[AuthController] DEBUG - logout() - POST /api/auth/logout - Logout request received");
             String token = extractTokenFromHeader(authorizationHeader);
             
             if (token == null) {
-                logger.warnWithContext("AuthController", "Logout failed: No token in Authorization header");
+                log.warn("[AuthController] WARN - logout() - Logout failed: No token in Authorization header");
                 return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
             }
             
             authService.logout(token, request);
-            logger.infoWithContext("AuthController", "User logged out successfully");
+            log.info("[AuthController] INFO - logout() - User logged out successfully");
             
             return new ResponseEntity<>(
                     new LogoutResponseDTO("Logged out successfully"),
@@ -122,10 +120,10 @@ public class AuthController {
             );
            
         } catch (RuntimeException e) {
-            logger.warnWithContext("AuthController", "Logout failed: error={}", e.getMessage());
+            log.warn("[AuthController] WARN - logout() - Logout failed: error=" + e.getMessage());
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
-            logger.errorWithContext("AuthController", "Failed to logout", e);
+            log.error("[AuthController] ERROR - logout() - Failed to logout: " + e.getMessage());
             throw e;
         }
     }
@@ -159,11 +157,11 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequestDTO changePasswordRequest) {
         
         try {
-            logger.traceWithContext("AuthController", "changePassword() called with timestamp={}", System.currentTimeMillis());
-            logger.debugWithContext("AuthController", "POST /api/auth/change-password - Password change request received");
+            log.trace("[AuthController] TRACE - changePassword() called with timestamp=" + System.currentTimeMillis());
+            log.debug("[AuthController] DEBUG - changePassword() - POST /api/auth/change-password - Password change request received");
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
-                logger.warnWithContext("AuthController", "Password change failed: User not authenticated");
+                log.warn("[AuthController] WARN - changePassword() - Password change failed: User not authenticated");
                 return new ResponseEntity<>(
                     new MessageResponseDTO("User not authenticated"),
                     HttpStatus.UNAUTHORIZED
@@ -176,14 +174,14 @@ public class AuthController {
             User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
             
-            logger.debugWithContext("AuthController", "User authenticated: userId={}, email={}", user.getId(), email);
+            log.debug("[AuthController] DEBUG - changePassword() - User authenticated: userId=" + user.getId() + ", email=" + email);
             authService.changePassword(
                 user.getId(),
                 changePasswordRequest.getOldPassword(),
                 changePasswordRequest.getNewPassword(),
                 changePasswordRequest.getConfirmPassword()
             );
-            logger.infoWithContext("AuthController", "Password changed successfully: userId={}, email={}", user.getId(), email);
+            log.info("[AuthController] INFO - changePassword() - Password changed successfully: userId=" + user.getId() + ", email=" + email);
             
             return new ResponseEntity<>(
                 new MessageResponseDTO("Password changed successfully"),
@@ -191,13 +189,13 @@ public class AuthController {
             );
            
         } catch (RuntimeException e) {
-            logger.warnWithContext("AuthController", "Password change failed: Invalid password, error={}", e.getMessage());
+            log.warn("[AuthController] WARN - changePassword() - Password change failed: Invalid password, error=" + e.getMessage());
             return new ResponseEntity<>(
                 new MessageResponseDTO(e.getMessage()),
                 HttpStatus.BAD_REQUEST
             );
         } catch (Exception e) {
-            logger.errorWithContext("AuthController", "Failed to change password", e);
+            log.error("[AuthController] ERROR - changePassword() - Failed to change password: " + e.getMessage());
             return new ResponseEntity<>(
                 new MessageResponseDTO("An error occurred while changing password"),
                 HttpStatus.INTERNAL_SERVER_ERROR
@@ -213,3 +211,4 @@ public class AuthController {
         }
     }
 }
+

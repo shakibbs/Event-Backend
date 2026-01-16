@@ -34,7 +34,7 @@ public class RoleController {
     private RoleService roleService;
     
     @Autowired
-    private ApplicationLoggerService logger;
+    private ApplicationLoggerService log;
 
     @PostMapping
     @Operation(summary = "Create a new role", description = "Creates a new role with provided details")
@@ -42,13 +42,13 @@ public class RoleController {
             @Valid @RequestBody @NonNull RoleRequestDTO roleRequestDTO) {
         
         try {
-            logger.traceWithContext("RoleController", "createRole() called with name={}, timestamp={}", roleRequestDTO.getName(), System.currentTimeMillis());
-            logger.debugWithContext("RoleController", "POST /api/roles - Creating role: name={}", roleRequestDTO.getName());
+            log.trace("[RoleController] TRACE - createRole() called with name=" + roleRequestDTO.getName() + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[RoleController] DEBUG - createRole() - POST /api/roles - Creating role: name=" + roleRequestDTO.getName());
             RoleResponseDTO createdRole = roleService.createRole(roleRequestDTO);
-            logger.infoWithContext("RoleController", "Role created successfully: roleId={}, name={}", createdRole.getId(), createdRole.getName());
+            log.info("[RoleController] INFO - createRole() - Role created successfully: roleId=" + createdRole.getId() + ", name=" + createdRole.getName());
             return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.errorWithContext("RoleController", "Failed to create role: name={}", e);
+            log.error("[RoleController] ERROR - createRole() - Failed to create role: name=" + roleRequestDTO.getName(), e);
             throw e;
         }
     }
@@ -77,19 +77,19 @@ public class RoleController {
             @Valid @RequestBody @NonNull RoleRequestDTO roleRequestDTO) {
         
         try {
-            logger.traceWithContext("RoleController", "updateRole() called with roleId={}, name={}", id, roleRequestDTO.getName());
-            logger.debugWithContext("RoleController", "PUT /api/roles/{} - Updating role: name={}", id, roleRequestDTO.getName());
+            log.trace("[RoleController] TRACE - updateRole() called with roleId=" + id + ", name=" + roleRequestDTO.getName());
+            log.debug("[RoleController] DEBUG - updateRole() - PUT /api/roles/" + id + " - Updating role: name=" + roleRequestDTO.getName());
             var result = roleService.updateRole(id, roleRequestDTO);
             
             if (result.isPresent()) {
-                logger.infoWithContext("RoleController", "Role updated successfully: roleId={}, name={}", id, result.get().getName());
+                log.info("[RoleController] INFO - updateRole() - Role updated successfully: roleId=" + id + ", name=" + result.get().getName());
                 return new ResponseEntity<>(result.get(), HttpStatus.OK);
             } else {
-                logger.warnWithContext("RoleController", "Role not found for update: roleId={}", id);
+                log.warn("[RoleController] WARN - updateRole() - Role not found for update: roleId=" + id);
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            logger.errorWithContext("RoleController", "Failed to update role: roleId={}", e);
+            log.error("[RoleController] ERROR - updateRole() - Failed to update role: roleId=" + id, e);
             throw e;
         }
     }
@@ -100,19 +100,19 @@ public class RoleController {
             @Parameter(description = "ID of role to delete") @PathVariable @NonNull Long id) {
         
         try {
-            logger.traceWithContext("RoleController", "deleteRole() called with roleId={}, timestamp={}", id, System.currentTimeMillis());
-            logger.debugWithContext("RoleController", "DELETE /api/roles/{} - Deleting role", id);
+            log.trace("[RoleController] TRACE - deleteRole() called with roleId=" + id + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[RoleController] DEBUG - deleteRole() - DELETE /api/roles/" + id + " - Deleting role");
             boolean deleted = roleService.deleteRole(id);
             
             if (deleted) {
-                logger.infoWithContext("RoleController", "Role deleted successfully: roleId={}", id);
+                log.info("[RoleController] INFO - deleteRole() - Role deleted successfully: roleId=" + id);
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
-                logger.warnWithContext("RoleController", "Role not found for deletion: roleId={}", id);
+                log.warn("[RoleController] WARN - deleteRole() - Role not found for deletion: roleId=" + id);
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            logger.errorWithContext("RoleController", "Failed to delete role: roleId={}", e);
+            log.error("[RoleController] ERROR - deleteRole() - Failed to delete role: roleId=" + id, e);
             throw e;
         }
     }
@@ -124,19 +124,19 @@ public class RoleController {
             @Parameter(description = "ID of permission to assign") @PathVariable @NonNull Long permissionId) {
         
         try {
-            logger.traceWithContext("RoleController", "addPermissionToRole() called with roleId={}, permissionId={}, timestamp={}", roleId, permissionId, System.currentTimeMillis());
-            logger.debugWithContext("RoleController", "POST /api/roles/{}/permissions/{} - Adding permission to role", roleId, permissionId);
+            log.trace("[RoleController] TRACE - addPermissionToRole() called with roleId=" + roleId + ", permissionId=" + permissionId + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[RoleController] DEBUG - addPermissionToRole() - POST /api/roles/" + roleId + "/permissions/" + permissionId + " - Adding permission to role");
             boolean added = roleService.addPermissionToRole(roleId, permissionId);
             
             if (added) {
-                logger.infoWithContext("RoleController", "Permission added to role successfully: roleId={}, permissionId={}", roleId, permissionId);
+                log.info("[RoleController] INFO - addPermissionToRole() - Permission added to role successfully: roleId=" + roleId + ", permissionId=" + permissionId);
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
-                logger.warnWithContext("RoleController", "Role or permission not found: roleId={}, permissionId={}", roleId, permissionId);
+                log.warn("[RoleController] WARN - addPermissionToRole() - Role or permission not found: roleId=" + roleId + ", permissionId=" + permissionId);
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            logger.errorWithContext("RoleController", "Failed to add permission to role: roleId={}, permissionId={}", e);
+            log.error("[RoleController] ERROR - addPermissionToRole() - Failed to add permission to role: roleId=" + roleId + ", permissionId=" + permissionId, e);
             throw e;
         }
     }
@@ -148,19 +148,19 @@ public class RoleController {
             @Parameter(description = "ID of permission to remove") @PathVariable @NonNull Long permissionId) {
         
         try {
-            logger.traceWithContext("RoleController", "removePermissionFromRole() called with roleId={}, permissionId={}, timestamp={}", roleId, permissionId, System.currentTimeMillis());
-            logger.debugWithContext("RoleController", "DELETE /api/roles/{}/permissions/{} - Removing permission from role", roleId, permissionId);
+            log.trace("[RoleController] TRACE - removePermissionFromRole() called with roleId=" + roleId + ", permissionId=" + permissionId + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[RoleController] DEBUG - removePermissionFromRole() - DELETE /api/roles/" + roleId + "/permissions/" + permissionId + " - Removing permission from role");
             boolean removed = roleService.removePermissionFromRole(roleId, permissionId);
             
             if (removed) {
-                logger.infoWithContext("RoleController", "Permission removed from role successfully: roleId={}, permissionId={}", roleId, permissionId);
+                log.info("[RoleController] INFO - removePermissionFromRole() - Permission removed from role successfully: roleId=" + roleId + ", permissionId=" + permissionId);
                 return new ResponseEntity<>(HttpStatus.OK);
             } else {
-                logger.warnWithContext("RoleController", "Role or permission not found for removal: roleId={}, permissionId={}", roleId, permissionId);
+                log.warn("[RoleController] WARN - removePermissionFromRole() - Role or permission not found for removal: roleId=" + roleId + ", permissionId=" + permissionId);
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            logger.errorWithContext("RoleController", "Failed to remove permission from role: roleId={}, permissionId={}", e);
+            log.error("[RoleController] ERROR - removePermissionFromRole() - Failed to remove permission from role: roleId=" + roleId + ", permissionId=" + permissionId, e);
             throw e;
         }
     }

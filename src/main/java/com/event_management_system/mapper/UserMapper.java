@@ -52,7 +52,6 @@ public class UserMapper {
             RoleResponseDTO roleDTO = new RoleResponseDTO();
             roleDTO.setId(user.getRole().getId());
             roleDTO.setName(user.getRole().getName());
-            roleDTO.setStatus(user.getRole().getStatus());
             roleDTO.setCreatedAt(user.getRole().getCreatedAt());
             roleDTO.setCreatedBy(user.getRole().getCreatedBy());
             roleDTO.setUpdatedAt(user.getRole().getUpdatedAt());
@@ -60,7 +59,6 @@ public class UserMapper {
             userResponseDTO.setRole(roleDTO);
         }
         
-        userResponseDTO.setStatus(user.getStatus());
         userResponseDTO.setCreatedAt(user.getCreatedAt());
         userResponseDTO.setCreatedBy(user.getCreatedBy());
         userResponseDTO.setUpdatedAt(user.getUpdatedAt());
@@ -102,7 +100,6 @@ public class UserMapper {
             RoleResponseDTO roleDTO = new RoleResponseDTO();
             roleDTO.setId(user.getRole().getId());
             roleDTO.setName(user.getRole().getName());
-            roleDTO.setStatus(user.getRole().getStatus());
             roleDTO.setCreatedAt(user.getRole().getCreatedAt());
             roleDTO.setCreatedBy(user.getRole().getCreatedBy());
             roleDTO.setUpdatedAt(user.getRole().getUpdatedAt());
@@ -110,7 +107,6 @@ public class UserMapper {
             userResponseDTO.setRole(roleDTO);
         }
         
-        userResponseDTO.setStatus(user.getStatus());
         userResponseDTO.setCreatedAt(user.getCreatedAt());
         userResponseDTO.setCreatedBy(user.getCreatedBy());
         userResponseDTO.setUpdatedAt(user.getUpdatedAt());

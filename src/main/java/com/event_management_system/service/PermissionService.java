@@ -21,7 +21,7 @@ import jakarta.annotation.PostConstruct;
 public class PermissionService {
 
     @Autowired
-    private ApplicationLoggerService logger;
+    private ApplicationLoggerService log;
 
     @Autowired
     private PermissionRepository permissionRepository;
@@ -31,17 +31,14 @@ public class PermissionService {
 
     @Transactional
     public PermissionResponseDTO createPermission(PermissionRequestDTO permissionRequestDTO) {
-        // TRACE: Entry point
-        logger.trace("[PermissionService] TRACE - createPermission() called with name=" + permissionRequestDTO.getName());
+        log.trace("[PermissionService] TRACE - createPermission() called with name=" + permissionRequestDTO.getName());
         
-        // DEBUG: Creating permission entity
-        logger.debug("[PermissionService] DEBUG - createPermission() - Creating permission entity from DTO");
+        log.debug("[PermissionService] DEBUG - createPermission() - Creating permission entity from DTO");
         Permission permission = permissionMapper.toEntity(permissionRequestDTO);
         permission.recordCreation("system");
         Permission savedPermission = permissionRepository.save(permission);
         
-        // INFO: Permission created successfully
-        logger.info("[PermissionService] INFO - Permission created successfully: permissionId=" + savedPermission.getId() + ", name=" + savedPermission.getName());
+        log.info("[PermissionService] INFO - Permission created successfully: permissionId=" + savedPermission.getId() + ", name=" + savedPermission.getName());
         
         return permissionMapper.toDto(savedPermission);
     }
@@ -54,18 +51,16 @@ public class PermissionService {
 
     @Transactional
     public Optional<PermissionResponseDTO> updatePermission(@NonNull Long id, @NonNull PermissionRequestDTO permissionRequestDTO) {
-        // TRACE: Entry point
-        logger.trace("[PermissionService] TRACE - updatePermission() called with permissionId=" + id + ", name=" + permissionRequestDTO.getName());
+        log.trace("[PermissionService] TRACE - updatePermission() called with permissionId=" + id + ", name=" + permissionRequestDTO.getName());
         
         return permissionRepository.findById(id).map(existingPermission -> {
-            // DEBUG: Updating permission entity
-            logger.debug("[PermissionService] DEBUG - updatePermission() - Updating permission entity");
+            
+            log.debug("[PermissionService] DEBUG - updatePermission() - Updating permission entity");
             permissionMapper.updateEntity(permissionRequestDTO, existingPermission);
             existingPermission.recordUpdate("system");
             Permission updatedPermission = permissionRepository.save(existingPermission);
             
-            // INFO: Permission updated successfully
-            logger.info("[PermissionService] INFO - Permission updated successfully: permissionId=" + updatedPermission.getId() + ", name=" + updatedPermission.getName());
+            log.info("[PermissionService] INFO - Permission updated successfully: permissionId=" + updatedPermission.getId() + ", name=" + updatedPermission.getName());
             
             return permissionMapper.toDto(updatedPermission);
         });
@@ -73,18 +68,15 @@ public class PermissionService {
 
     @Transactional
     public boolean deletePermission(@NonNull Long id) {
-        // TRACE: Entry point
-        logger.trace("[PermissionService] TRACE - deletePermission() called with permissionId=" + id);
+        log.trace("[PermissionService] TRACE - deletePermission() called with permissionId=" + id);
         
         return permissionRepository.findById(id).map(permission -> {
-            // DEBUG: Marking permission as deleted
-            logger.debug("[PermissionService] DEBUG - deletePermission() - Marking permission as deleted");
+            log.debug("[PermissionService] DEBUG - deletePermission() - Marking permission as deleted");
             String permissionName = permission.getName();
             permission.markDeleted();
             permissionRepository.save(permission);
             
-            // INFO: Permission deleted successfully
-            logger.info("[PermissionService] INFO - Permission deleted successfully: permissionId=" + id + ", name=" + permissionName);
+            log.info("[PermissionService] INFO - Permission deleted successfully: permissionId=" + id + ", name=" + permissionName);
             
             return true;
         }).orElse(false);
@@ -98,11 +90,9 @@ public class PermissionService {
                 .collect(Collectors.toList());
     }
 
-    // Initialize default permissions for the system
     @PostConstruct
     @Transactional
     public void initializeDefaultPermissions() {
-        // Check if permissions already exist
         if (permissionRepository.count() > 0) {
             return;
         }
@@ -111,6 +101,9 @@ public class PermissionService {
         createPermissionIfNotExists("user.manage.all", "Can manage all users in the system");
         createPermissionIfNotExists("role.manage.all", "Can manage all roles in the system");
         createPermissionIfNotExists("event.manage.all", "Can manage all events in the system");
+        createPermissionIfNotExists("event.approve", "Can approve pending events");
+        createPermissionIfNotExists("event.hold", "Can hold/pause events");
+        createPermissionIfNotExists("event.reactivate", "Can reactivate held events");
         createPermissionIfNotExists("system.config", "Can configure system settings");
         createPermissionIfNotExists("history.view.all", "Can view all users' history (login, password, activity)");
 
@@ -139,3 +132,4 @@ public class PermissionService {
         }
     }
 }
+

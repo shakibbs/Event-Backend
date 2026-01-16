@@ -14,12 +14,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "app_users")
+@Table(name = "event_users")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class User extends BaseEntity {
+public class User extends BaseAuditEntity {
 
     @NotBlank(message = "Full name is required")
     @Size(max = 100, message = "Full name must not exceed 100 characters")

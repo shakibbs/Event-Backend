@@ -32,7 +32,6 @@ public class PermissionMapper {
         dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setUpdatedBy(entity.getUpdatedBy());
-        dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
         dto.setDeleted(entity.getDeleted());
         
         return dto;

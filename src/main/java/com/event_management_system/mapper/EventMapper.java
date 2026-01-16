@@ -63,7 +63,18 @@ public class EventMapper {
         
         dto.setCreatedBy(entity.getCreatedBy());
         dto.setUpdatedBy(entity.getUpdatedBy());
-        dto.setStatus(entity.getStatus());
+        
+        
+        dto.setApprovalStatus(entity.getApprovalStatus());
+        if (entity.getApprovedBy() != null) {
+            dto.setApprovedById(entity.getApprovedBy().getId());
+            dto.setApprovedByName(entity.getApprovedBy().getFullName());
+        }
+        if (entity.getApprovedAt() != null) {
+            dto.setApprovedAt(entity.getApprovedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+        
+        dto.setEventStatus(entity.getCurrentEventStatus());  // Set calculated event status
         dto.setDeleted(entity.getDeleted());
         
         return dto;

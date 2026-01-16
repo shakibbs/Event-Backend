@@ -44,6 +44,13 @@ A comprehensive Spring Boot-based REST API for managing events with enterprise-g
 - 🎯 **Activity Audit Trail** (user login/logout, event creation/modification)
 - 🔍 **Request/Response Logging** (API endpoint tracking)
 
+### Scheduler Features
+- ⏰ **Event Reminder Job** - Sends email reminders to attendees before events start (5-minute intervals)
+- 🔄 **Event Status Update Job** - Automatically marks events as COMPLETED after they end (10-minute intervals)
+- 🗄️ **Audit Log Archival Job** - Archives old audit logs (90-day retention, runs daily)
+- 📧 **Email Service** - SMTP integration for event notifications and reminders
+- 🎯 **Smart Scheduling** - Configurable cron expressions for all scheduled tasks
+
 ## Technologies Used
 
 ### Backend Framework
@@ -52,6 +59,8 @@ A comprehensive Spring Boot-based REST API for managing events with enterprise-g
 - **Spring Web** - Web layer
 - **Spring Data JPA** - ORM/Persistence
 - **Spring Security 6.2.8** - Authentication & Authorization
+- **Spring Scheduler** - Task scheduling and automation
+- **Spring Mail** - Email notifications
 
 ### Database & Persistence
 - **MySQL 8.0+** - Relational database
@@ -134,12 +143,22 @@ src/main/java/com/event_management_system/
 │   ├── JwtAuthenticationFilter.java # Authentication filter
 │   ├── TokenCacheService.java # Server-side token cache
 │   └── CustomUserDetailsService.java
+├── scheduler/              # Scheduled tasks
+│   ├── config/
+│   │   └── SchedulerConfig.java # Scheduler configuration
+│   ├── job/
+│   │   ├── EventReminderJob.java # Email reminder job
+│   │   ├── EventStatusUpdateJob.java # Auto-complete events
+│   │   └── AuditLogArchivalJob.java # Log cleanup job
+│   └── service/
+│       └── EventReminderSentService.java # Reminder tracking
 ├── service/                # Business logic
 │   ├── ApplicationLoggerService.java # Centralized logging
 │   ├── AuthService.java    # Authentication service
 │   ├── UserService.java    # User management
 │   ├── RoleService.java    # Role management
 │   ├── EventService.java   # Event management
+│   ├── EmailService.java   # Email notifications
 │   ├── PermissionService.java # Permission management
 │   ├── UserActivityHistoryService.java # Activity logging
 │   ├── UserLoginLogoutHistoryService.java # Login/Logout tracking
@@ -258,6 +277,60 @@ logs/
 | **SecurityConfig** | Spring Security setup | Configures filter chain, CORS, etc. |
 
 
+
+## Database Setup & Maintenance
+
+### Initial Database Setup
+
+1. **Create the MySQL database:**
+   ```sql
+   CREATE DATABASE event_management_db;
+   ```
+
+2. **Run the application** - Hibernate will auto-create tables based on `spring.jpa.hibernate.ddl-auto=update` in `application.properties`
+
+### Database Maintenance Scripts
+
+If you encounter database issues (corrupted columns, old schema remnants), run the maintenance script:
+
+```sql
+-- File: fix-role-status.sql
+-- This script fixes common database issues:
+-- - Removes extra columns from old schema
+-- - Drops unused tables
+-- - Verifies table structures
+
+-- Run in MySQL Workbench:
+USE event_management_db;
+-- Then execute the entire fix-role-status.sql script
+```
+
+**Common Database Issues & Fixes:**
+
+| Issue | Solution |
+|-------|----------|
+| Extra `user_type` column in `app_roles` | Run `fix-role-status.sql` |
+| Empty `user_role` table | Run `fix-role-status.sql` to drop it |
+| Corrupted status values | Script will clean up invalid status values |
+
+### Verify Database Structure
+
+```sql
+-- Check roles table
+SHOW COLUMNS FROM app_roles;
+
+-- Check users and their roles
+SELECT u.id, u.full_name, u.email, r.name as role_name 
+FROM app_users u 
+LEFT JOIN app_roles r ON u.role_id = r.id;
+
+-- Check role permissions
+SELECT r.name as role_name, p.name as permission_name
+FROM app_roles r
+JOIN role_permissions rp ON r.id = rp.role_id
+JOIN app_permissions p ON rp.permission_id = p.id
+ORDER BY r.name, p.name;
+```
 
 ## Getting Started
 

@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- Spring Boot default configuration -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
     
-    <!-- Log file location -->
     <property name="LOG_PATH" value="logs"/>
     
-    <!-- ==================== CONSOLE APPENDER ==================== -->
-    <!-- For real-time viewing in terminal/IDE -->
+    <!-- Console output -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -15,37 +12,22 @@
         </encoder>
     </appender>
 
-    <!-- ==================== DAILY ROLLING FILE APPENDER ==================== -->
-    <!-- Main application log file - ALL logs -->
+    <!-- All logs -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- Current log file (written to TODAY) -->
         <file>${LOG_PATH}/application.log</file>
-        
-        <!-- Encoder with detailed format -->
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
             <charset>UTF-8</charset>
         </encoder>
-        
-        <!-- Rolling Policy - Daily rotation -->
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <!-- Daily log file naming pattern -->
-            <!-- Example: application-2025-12-20.1.log.gz -->
             <fileNamePattern>${LOG_PATH}/archive/application-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            
-            <!-- Max file size before rolling (if file reaches 10MB before midnight) -->
             <maxFileSize>10MB</maxFileSize>
-            
-            <!-- Keep logs for 30 days -->
             <maxHistory>30</maxHistory>
-            
-            <!-- Total size cap for all logs (prevent disk overflow) -->
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
     </appender>
 
-    <!-- ==================== EVENT CONTROLLER APPENDER ==================== -->
-    <!-- Controller layer logs ONLY -->
+    <!-- Controller logs -->
     <appender name="EVENT_CONTROLLER" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/event-controller.log</file>
         <encoder>
@@ -58,14 +40,12 @@
             <maxHistory>30</maxHistory>
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
-        <!-- Only DEBUG level and above -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>DEBUG</level>
         </filter>
     </appender>
 
-    <!-- ==================== SERVICE LAYER APPENDER ==================== -->
-    <!-- Service layer logs ONLY -->
+    <!-- Service logs -->
     <appender name="SERVICE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/service.log</file>
         <encoder>
@@ -78,14 +58,12 @@
             <maxHistory>30</maxHistory>
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
-        <!-- Only DEBUG level and above -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>DEBUG</level>
         </filter>
     </appender>
 
-    <!-- ==================== ERROR APPENDER ==================== -->
-    <!-- ERROR level logs ONLY - for quick error review -->
+    <!-- Error logs -->
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_PATH}/error.log</file>
         <encoder>
@@ -98,46 +76,36 @@
             <maxHistory>30</maxHistory>
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
-        <!-- Only ERROR level logs -->
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
         </filter>
     </appender>
 
-    <!-- ==================== LOGGER CONFIGURATION ==================== -->
-    
-    <!-- Application Logger Service -->
     <logger name="com.event_management_system.service.ApplicationLoggerService" level="DEBUG">
         <appender-ref ref="FILE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <!-- Controllers - logs go to FILE, EVENT_CONTROLLER, and CONSOLE -->
     <logger name="com.event_management_system.controller" level="DEBUG">
         <appender-ref ref="FILE"/>
         <appender-ref ref="EVENT_CONTROLLER"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <!-- Services - logs go to FILE, SERVICE, and CONSOLE -->
     <logger name="com.event_management_system.service" level="DEBUG">
         <appender-ref ref="FILE"/>
         <appender-ref ref="SERVICE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <!-- Error logs - go to ERROR_FILE only -->
     <logger name="com.event_management_system" level="ERROR">
         <appender-ref ref="ERROR_FILE"/>
     </logger>
 
-    <!-- Spring Framework logs - INFO level only -->
     <logger name="org.springframework" level="INFO"/>
     <logger name="org.springframework.web" level="INFO"/>
     <logger name="org.springframework.security" level="DEBUG"/>
 
-    <!-- ==================== ROOT LOGGER ==================== -->
-    <!-- Default logger for everything else -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>

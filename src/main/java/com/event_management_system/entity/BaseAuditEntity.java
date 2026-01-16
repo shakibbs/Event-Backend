@@ -14,11 +14,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @MappedSuperclass
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class BaseEntity {
+public abstract class BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,11 +59,7 @@ public abstract class BaseEntity {
         return Boolean.TRUE.equals(this.deleted);
     }
 
-    public static boolean isDateRangeValid(LocalDateTime start, LocalDateTime end) {
-        return start != null && end != null && end.isAfter(start);
-    }
-
-    public void copyAuditFrom(BaseEntity other) {
+    public void copyAuditFrom(BaseAuditEntity other) {
         if (other == null) return;
         this.createdAt = other.createdAt;
         this.createdBy = other.createdBy;

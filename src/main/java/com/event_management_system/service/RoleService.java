@@ -27,7 +27,7 @@ import jakarta.annotation.PostConstruct;
 public class RoleService {
 
     @Autowired
-    private ApplicationLoggerService logger;
+    private ApplicationLoggerService log;
 
     @Autowired
     private RoleRepository roleRepository;
@@ -43,31 +43,27 @@ public class RoleService {
 
     @Transactional
     public RoleResponseDTO createRole(RoleRequestDTO roleRequestDTO) {
-        // TRACE: Entry point
-        logger.trace("[RoleService] TRACE - createRole() called with name=" + roleRequestDTO.getName());
+        log.trace("[RoleService] TRACE - createRole() called with name=" + roleRequestDTO.getName());
         
-        // DEBUG: Creating role entity
-        logger.debug("[RoleService] DEBUG - createRole() - Creating role entity from DTO");
+        log.debug("[RoleService] DEBUG - createRole() - Creating role entity from DTO");
         Role role = roleMapper.toEntity(roleRequestDTO);
         role.recordCreation("system");
         Role savedRole = roleRepository.save(role);
         
-        // DEBUG: Assigning permissions if provided
         if (roleRequestDTO.getPermissionIds() != null && !roleRequestDTO.getPermissionIds().isEmpty()) {
-            logger.debug("[RoleService] DEBUG - createRole() - Assigning " + roleRequestDTO.getPermissionIds().size() + " permissions to role");
+            log.debug("[RoleService] DEBUG - createRole() - Assigning " + roleRequestDTO.getPermissionIds().size() + " permissions to role");
             for (Long permissionId : roleRequestDTO.getPermissionIds()) {
                 if (permissionId != null) {
                     permissionRepository.findById(permissionId).ifPresent(permission -> {
                         RolePermission rolePermission = new RolePermission(savedRole, permission);
                         rolePermissionRepository.save(rolePermission);
-                        logger.debug("[RoleService] DEBUG - createRole() - Assigned permission: " + permission.getName());
+                        log.debug("[RoleService] DEBUG - createRole() - Assigned permission: " + permission.getName());
                     });
                 }
             }
         }
         
-        // INFO: Role created successfully
-        logger.info("[RoleService] INFO - Role created successfully: roleId=" + savedRole.getId() + ", name=" + savedRole.getName());
+        log.info("[RoleService] INFO - Role created successfully: roleId=" + savedRole.getId() + ", name=" + savedRole.getName());
         
         return roleMapper.toDto(savedRole);
     }
@@ -106,33 +102,29 @@ public class RoleService {
                     }
                     return permissions;
                 })
-                .orElse(new HashSet<>()); // Return empty set if role not found
+                .orElse(new HashSet<>());
     }
 
     @Transactional
     public Optional<RoleResponseDTO> updateRole(@NonNull Long id, @NonNull RoleRequestDTO roleRequestDTO) {
-        // TRACE: Entry point
-        logger.trace("[RoleService] TRACE - updateRole() called with roleId=" + id + ", name=" + roleRequestDTO.getName());
+        log.trace("[RoleService] TRACE - updateRole() called with roleId=" + id + ", name=" + roleRequestDTO.getName());
         
         return roleRepository.findById(id).map(existingRole -> {
-            // DEBUG: Updating role entity
-            logger.debug("[RoleService] DEBUG - updateRole() - Updating role entity");
+            log.debug("[RoleService] DEBUG - updateRole() - Updating role entity");
             roleMapper.updateEntity(roleRequestDTO, existingRole);
             existingRole.recordUpdate("system");
             
-            // DEBUG: Update permissions if provided
             if (roleRequestDTO.getPermissionIds() != null) {
-                logger.debug("[RoleService] DEBUG - updateRole() - Removing existing permissions for roleId=" + id);
-                // Remove all existing permissions
+                log.debug("[RoleService] DEBUG - updateRole() - Removing existing permissions for roleId=" + id);
                 rolePermissionRepository.findByRole(existingRole).forEach(rolePermissionRepository::delete);
                 
-                logger.debug("[RoleService] DEBUG - updateRole() - Assigning " + roleRequestDTO.getPermissionIds().size() + " new permissions");
+                log.debug("[RoleService] DEBUG - updateRole() - Assigning " + roleRequestDTO.getPermissionIds().size() + " new permissions");
                 for (Long permissionId : roleRequestDTO.getPermissionIds()) {
                     if (permissionId != null) {
                         permissionRepository.findById(permissionId).ifPresent(permission -> {
                             RolePermission rolePermission = new RolePermission(existingRole, permission);
                             rolePermissionRepository.save(rolePermission);
-                            logger.debug("[RoleService] DEBUG - updateRole() - Assigned permission: " + permission.getName());
+                            log.debug("[RoleService] DEBUG - updateRole() - Assigned permission: " + permission.getName());
                         });
                     }
                 }
@@ -140,8 +132,7 @@ public class RoleService {
             
             Role updatedRole = roleRepository.save(existingRole);
             
-            // INFO: Role updated successfully
-            logger.info("[RoleService] INFO - Role updated successfully: roleId=" + updatedRole.getId() + ", name=" + updatedRole.getName());
+            log.info("[RoleService] INFO - Role updated successfully: roleId=" + updatedRole.getId() + ", name=" + updatedRole.getName());
             
             return roleMapper.toDto(updatedRole);
         });
@@ -149,18 +140,15 @@ public class RoleService {
 
     @Transactional
     public boolean deleteRole(@NonNull Long id) {
-        // TRACE: Entry point
-        logger.trace("[RoleService] TRACE - deleteRole() called with roleId=" + id);
+        log.trace("[RoleService] TRACE - deleteRole() called with roleId=" + id);
         
         return roleRepository.findById(id).map(role -> {
-            // DEBUG: Marking role as deleted
-            logger.debug("[RoleService] DEBUG - deleteRole() - Marking role as deleted");
+            log.debug("[RoleService] DEBUG - deleteRole() - Marking role as deleted");
             String roleName = role.getName();
             role.markDeleted();
             roleRepository.save(role);
             
-            // INFO: Role deleted successfully
-            logger.info("[RoleService] INFO - Role deleted successfully: roleId=" + id + ", name=" + roleName);
+            log.info("[RoleService] INFO - Role deleted successfully: roleId=" + id + ", name=" + roleName);
             
             return true;
         }).orElse(false);
@@ -175,7 +163,6 @@ public class RoleService {
             Role role = roleOpt.get();
             Permission permission = permissionOpt.get();
             
-            // Check if this permission is not already assigned
             if (!rolePermissionRepository.existsByRoleAndPermission(role, permission)) {
                 RolePermission rolePermission = new RolePermission(role, permission);
                 rolePermissionRepository.save(rolePermission);
@@ -200,30 +187,26 @@ public class RoleService {
         return false;
     }
     
-    // Alias methods to match RoleController expectations
     @Transactional
     public boolean addPermissionToRole(@NonNull Long roleId, @NonNull Long permissionId) {
         return assignPermissionToRole(roleId, permissionId);
     }
 
-    // Initialize default roles for the system
     @PostConstruct
     @Transactional
     public void initializeDefaultRoles() {
-        // Check if roles already exist
         if (roleRepository.count() > 0) {
             return;
         }
 
-        // Create SuperAdmin role with all permissions
         createRoleWithPermissions("SuperAdmin", 
-                "user.manage.all", "role.manage.all", "event.manage.all", "system.config", "history.view.all");
+                "user.manage.all", "role.manage.all", "event.manage.all", "event.approve", 
+                "event.hold", "event.reactivate", "system.config", "history.view.all");
 
-        // Create Admin role with limited permissions
         createRoleWithPermissions("Admin", 
-                "user.manage.own", "event.manage.own", "event.view.all", "event.invite", "history.view.own");
+                "user.manage.own", "event.manage.own", "event.view.all", "event.invite", 
+                "event.approve", "history.view.own");
 
-        // Create Attendee role with basic permissions
         createRoleWithPermissions("Attendee", 
                 "event.view.public", "event.view.invited", "event.attend", "history.view.own");
     }
@@ -235,7 +218,6 @@ public class RoleService {
             role.recordCreation("system");
             Role savedRole = roleRepository.save(role);
             
-            // Assign permissions through RolePermission junction table
             for (String permissionName : permissionNames) {
                 permissionRepository.findByName(permissionName).ifPresent(permission -> {
                     RolePermission rolePermission = new RolePermission(savedRole, permission);
@@ -245,3 +227,4 @@ public class RoleService {
         }
     }
 }
+

@@ -11,12 +11,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "app_permissions")
+@Table(name = "event_permissions")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class Permission extends BaseEntity {
+public class Permission extends BaseAuditEntity {
 
     @NotBlank(message = "Permission name is required")
     @Size(min = 3, max = 100, message = "Permission name must be between 3 and 100 characters")

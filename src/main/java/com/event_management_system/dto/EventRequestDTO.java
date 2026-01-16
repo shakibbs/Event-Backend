@@ -26,22 +26,20 @@ public class EventRequestDTO {
     @NotNull(message = "End time is required")
     @Schema(example = "2025-12-20 17:00:00", description = "Event end time (format: yyyy-MM-dd HH:mm:ss)")
     private String endTime;
-    
 
     @NotBlank(message = "Location is required")
     private String location;
-    
-    @Schema(example = "PUBLIC", description = "Event visibility level (PUBLIC, PRIVATE, INVITE_ONLY)")
+
+    @Schema(example = "PUBLIC", description = "Event visibility level (PUBLIC, PRIVATE)")
     private Event.Visibility visibility = Event.Visibility.PUBLIC;
-    
+
     public boolean isDateRangeValid() {
-        if (startTime == null || endTime == null) return false;
+        if (startTime == null || endTime == null)
+            return false;
         return endTime.compareTo(startTime) > 0;
     }
-    
+
     public boolean areDatesInFuture() {
-        // Simple validation - just check if dates are in the future (basic check)
-        // This is a basic check - actual date validation should be done in the service layer
         return startTime != null && endTime != null;
     }
 }

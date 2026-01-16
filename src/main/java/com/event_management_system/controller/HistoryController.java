@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.event_management_system.dto.UserActivityHistoryResponseDTO;
 import com.event_management_system.dto.UserLoginLogoutHistoryResponseDTO;
 import com.event_management_system.dto.UserPasswordHistoryResponseDTO;
+import com.event_management_system.service.ApplicationLoggerService;
 import com.event_management_system.service.UserActivityHistoryService;
 import com.event_management_system.service.UserLoginLogoutHistoryService;
 import com.event_management_system.service.UserPasswordHistoryService;
@@ -26,9 +27,7 @@ import com.event_management_system.service.UserPasswordHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/history")
 @Tag(name = "History", description = "APIs for retrieving user history and activities")
@@ -45,6 +44,9 @@ public class HistoryController {
     
     @Autowired
     private com.event_management_system.service.UserService userService;
+    
+    @Autowired
+    private ApplicationLoggerService log;
     
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -88,16 +90,16 @@ public class HistoryController {
             
             canViewUserHistory(targetUserId);
             
-            log.info("Fetching login history for user: {}", targetUserId);
+            log.info("[HistoryController] INFO - getLoginHistory() - Fetching login history for user: {}", targetUserId);
             
             List<UserLoginLogoutHistoryResponseDTO> history = loginHistoryService.getLoginHistory(targetUserId);
             
             return new ResponseEntity<>(history, HttpStatus.OK);
         } catch (RuntimeException e) {
-            log.error("Failed to fetch login history: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getLoginHistory() - Failed to fetch login history: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (Exception e) {
-            log.error("Failed to fetch login history: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getLoginHistory() - Failed to fetch login history: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -116,16 +118,16 @@ public class HistoryController {
                 "Target user ID should not be null");
             canViewUserHistory(targetUserId);
             
-            log.info("Fetching active sessions for user: {}", targetUserId);
+            log.info("[HistoryController] INFO - getActiveSessions() - Fetching active sessions for user: {}", targetUserId);
             
             List<UserLoginLogoutHistoryResponseDTO> activeSessions = loginHistoryService.getActiveSessions(targetUserId);
             
             return new ResponseEntity<>(activeSessions, HttpStatus.OK);
         } catch (RuntimeException e) {
-            log.error("Failed to fetch active sessions: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getActiveSessions() - Failed to fetch active sessions: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (Exception e) {
-            log.error("Failed to fetch active sessions: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getActiveSessions() - Failed to fetch active sessions: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -147,14 +149,14 @@ public class HistoryController {
             Objects.requireNonNull(startDate, "Start date should not be null");
             Objects.requireNonNull(endDate, "End date should not be null");
             
-            log.info("Fetching login history for user {} from {} to {}", userId, startDate, endDate);
+            log.info("[HistoryController] INFO - getLoginHistoryByDateRange() - Fetching login history for user {} from {} to {}", userId, startDate, endDate);
             
             List<UserLoginLogoutHistoryResponseDTO> history = 
                 loginHistoryService.getLoginHistoryByDateRange(userId, startDate, endDate);
             
             return new ResponseEntity<>(history, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Failed to fetch login history by date range: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getLoginHistoryByDateRange() - Failed to fetch login history by date range: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -169,14 +171,14 @@ public class HistoryController {
             Long userId = getCurrentUserId();
             Objects.requireNonNull(userId, "User ID should not be null");
             
-            log.info("Fetching failed login attempts for user: {}", userId);
+            log.info("[HistoryController] INFO - getFailedLogins() - Fetching failed login attempts for user: {}", userId);
             
             List<UserLoginLogoutHistoryResponseDTO> failedLogins = 
                 loginHistoryService.getLoginHistoryByStatus(userId, "FAILED");
             
             return new ResponseEntity<>(failedLogins, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Failed to fetch failed login attempts: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getFailedLogins() - Failed to fetch failed login attempts: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -196,16 +198,16 @@ public class HistoryController {
             
             canViewUserHistory(targetUserId);
             
-            log.info("Fetching password history for user: {}", targetUserId);
+            log.info("[HistoryController] INFO - getPasswordHistory() - Fetching password history for user: {}", targetUserId);
             
             List<UserPasswordHistoryResponseDTO> history = passwordHistoryService.getPasswordHistory(targetUserId);
             
             return new ResponseEntity<>(history, HttpStatus.OK);
         } catch (RuntimeException e) {
-            log.error("Failed to fetch password history: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getPasswordHistory() - Failed to fetch password history: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (Exception e) {
-            log.error("Failed to fetch password history: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getPasswordHistory() - Failed to fetch password history: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -223,14 +225,14 @@ public class HistoryController {
             Long userId = getCurrentUserId();
             Objects.requireNonNull(userId, "User ID should not be null");
             
-            log.info("Fetching password changes for user {} in last {} days", userId, days);
+            log.info("[HistoryController] INFO - getRecentPasswordChanges() - Fetching password changes for user {} in last {} days", userId, days);
             
             List<UserPasswordHistoryResponseDTO> history = 
                 passwordHistoryService.getRecentPasswordChanges(userId, days);
             
             return new ResponseEntity<>(history, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Failed to fetch recent password changes: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getRecentPasswordChanges() - Failed to fetch recent password changes: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -251,16 +253,16 @@ public class HistoryController {
             
             canViewUserHistory(targetUserId);
             
-            log.info("Fetching activity history for user: {}", targetUserId);
+            log.info("[HistoryController] INFO - getActivityHistory() - Fetching activity history for user: {}", targetUserId);
             
             List<UserActivityHistoryResponseDTO> activities = activityHistoryService.getActivityHistory(targetUserId);
             
             return new ResponseEntity<>(activities, HttpStatus.OK);
         } catch (RuntimeException e) {
-            log.error("Failed to fetch activity history: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getActivityHistory() - Failed to fetch activity history: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (Exception e) {
-            log.error("Failed to fetch activity history: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getActivityHistory() - Failed to fetch activity history: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -278,14 +280,14 @@ public class HistoryController {
             Long userId = getCurrentUserId();
             Objects.requireNonNull(userId, "User ID should not be null");
             
-            log.info("Fetching recent activities for user {} in last {} days", userId, days);
+            log.info("[HistoryController] INFO - getRecentActivities() - Fetching recent activities for user {} in last {} days", userId, days);
             
             List<UserActivityHistoryResponseDTO> activities = 
                 activityHistoryService.getRecentActivities(userId, days);
             
             return new ResponseEntity<>(activities, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Failed to fetch recent activities: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getRecentActivities() - Failed to fetch recent activities: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -302,14 +304,14 @@ public class HistoryController {
         try {
             Objects.requireNonNull(type, "Activity type should not be null");
             
-            log.info("Fetching activities of type: {}", type);
+            log.info("[HistoryController] INFO - getActivitiesByType() - Fetching activities of type: {}", type);
             
             List<UserActivityHistoryResponseDTO> activities = 
                 activityHistoryService.getActivitiesByType(type);
             
             return new ResponseEntity<>(activities, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Failed to fetch activities by type: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getActivitiesByType() - Failed to fetch activities by type: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -331,14 +333,14 @@ public class HistoryController {
             Objects.requireNonNull(startDate, "Start date should not be null");
             Objects.requireNonNull(endDate, "End date should not be null");
             
-            log.info("Fetching activities for user {} from {} to {}", userId, startDate, endDate);
+            log.info("[HistoryController] INFO - getActivitiesByDateRange() - Fetching activities for user {} from {} to {}", userId, startDate, endDate);
             
             List<UserActivityHistoryResponseDTO> activities = 
                 activityHistoryService.getActivitiesByDateRange(userId, startDate, endDate);
             
             return new ResponseEntity<>(activities, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Failed to fetch activities by date range: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getActivitiesByDateRange() - Failed to fetch activities by date range: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -355,14 +357,14 @@ public class HistoryController {
         try {
             Objects.requireNonNull(sessionId, "Session ID should not be null");
             
-            log.info("Fetching activities for session: {}", sessionId);
+            log.info("[HistoryController] INFO - getActivitiesBySession() - Fetching activities for session: {}", sessionId);
             
             List<UserActivityHistoryResponseDTO> activities = 
                 activityHistoryService.getActivitiesBySession(sessionId);
             
             return new ResponseEntity<>(activities, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Failed to fetch activities by session: {}", e.getMessage());
+            log.error("[HistoryController] ERROR - getActivitiesBySession() - Failed to fetch activities by session: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -47,10 +47,12 @@ public class EventAttendees extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "event_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Event event;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private User user;
 
     @Email(message = "Invalid email format")

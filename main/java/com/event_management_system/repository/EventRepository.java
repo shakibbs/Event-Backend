@@ -18,4 +18,7 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
     
  
     List<Event> findAllByDeletedFalse();
+
+    // Find all public, upcoming, not-deleted events
+    List<Event> findByVisibilityAndEventStatusAndDeletedFalse(Event.Visibility visibility, Event.EventStatus eventStatus);
 }

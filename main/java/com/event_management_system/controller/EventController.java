@@ -45,6 +45,10 @@ import jakarta.validation.Valid;
 @Tag(name = "Event Management", description = "APIs for managing events in the system")
 public class EventController {
 
+
+
+
+
         @Autowired
         private EventService eventService;
 
@@ -53,6 +57,8 @@ public class EventController {
 
         @Autowired
         private ApplicationLoggerService log;
+
+
 
         @PostMapping
         @Operation(summary = "Create a new event", description = "Creates a new event with provided details. The start time must be before end time.")
@@ -148,6 +154,13 @@ public class EventController {
                         log.error("Failed to retrieve events", e);
                         throw e;
                 }
+        }
+
+
+         @GetMapping("/public")
+        public ResponseEntity<List<EventResponseDTO>> getPublicUpcomingEvents() {
+                List<EventResponseDTO> events = eventService.findPublicUpcomingEvents();
+                return ResponseEntity.ok(events);
         }
 
         @GetMapping("/{id}")
@@ -267,51 +280,35 @@ public class EventController {
                 }
         }
 
-        @PostMapping("/{eventId}/attend")
-        @Operation(summary = "Attend a PUBLIC event", description = "Allows a user to self-register for a PUBLIC event. "
-                        +
-                        "PRIVATE and INVITE_ONLY events require an invitation from the organizer. " +
-                        "User cannot attend if already registered or if event has started.")
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Successfully registered for the event"),
-                        @ApiResponse(responseCode = "400", description = "Event is not PUBLIC or already attending"),
-                        @ApiResponse(responseCode = "403", description = "No permission to attend events"),
-                        @ApiResponse(responseCode = "404", description = "Event not found"),
-                        @ApiResponse(responseCode = "500", description = "Internal server error")
-        })
-        public ResponseEntity<String> attendEvent(
-                        @Parameter(description = "Unique identifier of the event to attend", required = true, example = "1") @PathVariable @NonNull Long eventId,
-                        Authentication authentication) {
+            @GetMapping("/{eventId}/attendees")
+            @Operation(summary = "Get attendees for an event", description = "Returns the list of attendees for a given event, including invitation status.")
+                        public ResponseEntity<List<com.event_management_system.dto.EventAttendeeDTO>> getEventAttendees(
+                                        @PathVariable Long eventId,
+                                        Authentication authentication) {
+                                String email = authentication.getName();
+                                User currentUser = userRepository.findByEmail(email)
+                                                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
 
-                try {
-                        log.trace("attendEvent() called with eventId={}, timestamp={}",
-                                        eventId, System.currentTimeMillis());
-
-                        log.debug("POST /api/events/{}/attend - User attempting to attend event", eventId);
-
-                        
-                        String email = authentication.getName();
-                        User currentUser = userRepository.findByEmail(email)
-                                        .orElseThrow(() -> new ResourceNotFoundException(
-                                                        "User not found with email: " + email));
-
-                        log.debug("User authenticated: userId={}, email={}", currentUser.getId(), email);
-
-                        boolean success = eventService.attendPublicEvent(eventId, currentUser.getId());
-
-                        if (!success) {
-                                throw new BadRequestException("Already attending or event not found");
+                                List<com.event_management_system.entity.EventAttendees> attendees = eventService.getAttendeesForEvent(eventId, currentUser.getId());
+                                // Map entities to DTOs
+                                List<com.event_management_system.dto.EventAttendeeDTO> attendeeDTOs = attendees.stream().map(att -> {
+                                        com.event_management_system.dto.EventAttendeeDTO dto = new com.event_management_system.dto.EventAttendeeDTO();
+                                        dto.setId(att.getId());
+                                        dto.setEmail(att.getEmail());
+                                        dto.setInvitationStatus(att.getInvitationStatus());
+                                        dto.setInvitationToken(att.getInvitationToken());
+                                        dto.setInvitationSentAt(att.getInvitationSentAt());
+                                        dto.setResponseAt(att.getResponseAt());
+                                        dto.setAdvanceReminderSent(att.getAdvanceReminderSent());
+                                        dto.setLastMinuteReminderSent(att.getLastMinuteReminderSent());
+                                        if (att.getUser() != null) {
+                                                dto.setUserId(att.getUser().getId());
+                                                dto.setUserFullName(att.getUser().getFullName());
+                                        }
+                                        return dto;
+                                }).toList();
+                                return ResponseEntity.ok(attendeeDTOs);
                         }
-
-                        log.info("User successfully registered for event: eventId={}, userId={}",
-                                        eventId, currentUser.getId());
-
-                        return ResponseEntity.ok("Successfully registered for the event");
-                } catch (Exception e) {
-                        log.error("Failed to attend event: eventId={}", eventId, e);
-                        throw e;
-                }
-        }
 
         @PostMapping(value = "/{eventId}/invite", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
         @Operation(summary = "Invite users to event", description = "Invite users via CSV file and broadcast to all registered users. Send as multipart/form-data.")

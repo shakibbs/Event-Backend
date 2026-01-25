@@ -276,8 +276,7 @@ public class EmailService {
     
     public boolean sendAutoAccountCredentials(String email, String fullName, String tempPassword) {
         try {
-            log.info("[EmailService] INFO - sendAutoAccountCredentials() - Starting to send credentials email to: {}", email);
-            log.debug("[EmailService] DEBUG - Email from: {}, Mail host: smtp.gmail.com", fromEmail);
+            log.info("[EmailService] INFO - 📧 sendAutoAccountCredentials() - Starting credentials email to: {}", email);
             
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -308,30 +307,34 @@ public class EmailService {
 
             helper.setText(body.toString(), true);
             
-            log.debug("[EmailService] DEBUG - Attempting to send email message...");
+            log.debug("[EmailService] DEBUG - Message prepared for {}", email);
+            log.debug("[EmailService] DEBUG - Attempting to send auto-account credentials email via SMTP to: {}", email);
+            
+            long startTime = System.currentTimeMillis();
             try {
                 mailSender.send(message);
-                log.info("[EmailService] INFO - Auto account credentials email successfully sent to: {} with login link: {}/login", 
-                         email, baseUrl);
+                long duration = System.currentTimeMillis() - startTime;
+                log.info("[EmailService] INFO - ✅ SUCCESS: Credentials email sent to {} ({}ms), login URL: {}/login", 
+                         email, duration, baseUrl);
                 return true;
-            } catch (Exception sendError) {
-                log.error("[EmailService] ERROR - SMTP send failed for {}: {}", email, sendError.getMessage());
-                log.error("[EmailService] ERROR - Send error stacktrace: ", sendError);
+            } catch (Exception smtpError) {
+                long duration = System.currentTimeMillis() - startTime;
+                log.error("[EmailService] ERROR - ❌ SMTP delivery failed for {} ({}ms): {}", 
+                         email, duration, smtpError.getMessage());
+                log.error("[EmailService] ERROR - Error type: {}", smtpError.getClass().getSimpleName());
+                log.error("[EmailService] ERROR - Stack trace: ", smtpError);
                 return false;
             }
 
         } catch (MessagingException e) {
-            log.error("[EmailService] ERROR - MessagingException failed to send auto account credentials to {}: {}", 
+            log.error("[EmailService] ERROR - ❌ MessagingException building credentials email for {}: {}", 
                      email, e.getMessage());
-            log.error("[EmailService] ERROR - Exception cause: {}", e.getCause());
-            e.printStackTrace();
-            log.error("[EmailService] ERROR - Full stack trace: ", e);
+            log.error("[EmailService] ERROR - Cause: {}", e.getCause());
             return false;
         } catch (Exception e) {
-            log.error("[EmailService] ERROR - Unexpected exception sending auto account credentials to {}: {}", 
+            log.error("[EmailService] ERROR - ❌ Unexpected error sending credentials to {}: {}", 
                      email, e.getMessage());
-            e.printStackTrace();
-            log.error("[EmailService] ERROR - Full stack trace: ", e);
+            log.error("[EmailService] ERROR - Stack trace: ", e);
             return false;
         }
     }
@@ -379,7 +382,7 @@ public class EmailService {
 
     
     public boolean sendWithRetry(java.util.function.Supplier<Boolean> emailSendTask, String recipientEmail) {
-        return sendWithRetry(emailSendTask, recipientEmail, 3);
+        return sendWithRetry(emailSendTask, recipientEmail, 5);
     }
 }
 

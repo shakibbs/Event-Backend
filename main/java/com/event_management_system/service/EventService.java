@@ -1,32 +1,33 @@
-package com.event_management_system.service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
+    package com.event_management_system.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.lang.NonNull;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+    import java.time.LocalDateTime;
+    import java.util.List;
+    import java.util.Objects;
+    import java.util.Optional;
+    import java.util.stream.Collectors;
 
-import com.event_management_system.dto.EventRequestDTO;
-import com.event_management_system.dto.EventResponseDTO;
-import com.event_management_system.entity.Event;
-import com.event_management_system.entity.EventAttendees;
-import com.event_management_system.entity.User;
-import com.event_management_system.exception.GlobalExceptionHandler.BadRequestException;
-import com.event_management_system.exception.GlobalExceptionHandler.ForbiddenException;
-import com.event_management_system.exception.GlobalExceptionHandler.ResourceNotFoundException;
-import com.event_management_system.mapper.EventMapper;
-import com.event_management_system.repository.EventAttendeesRepository;
-import com.event_management_system.repository.EventRepository;
-import com.event_management_system.repository.UserRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.Pageable;
+    import org.springframework.jdbc.core.JdbcTemplate;
+    import org.springframework.lang.NonNull;
+    import org.springframework.scheduling.annotation.Async;
+    import org.springframework.stereotype.Service;
+    import org.springframework.transaction.annotation.Transactional;
+
+    import com.event_management_system.dto.EventRequestDTO;
+    import com.event_management_system.dto.EventResponseDTO;
+    import com.event_management_system.entity.Event;
+    import com.event_management_system.entity.EventAttendees;
+    import com.event_management_system.entity.User;
+    import com.event_management_system.exception.GlobalExceptionHandler.BadRequestException;
+    import com.event_management_system.exception.GlobalExceptionHandler.ForbiddenException;
+    import com.event_management_system.exception.GlobalExceptionHandler.ResourceNotFoundException;
+    import com.event_management_system.mapper.EventMapper;
+    import com.event_management_system.repository.EventAttendeesRepository;
+    import com.event_management_system.repository.EventRepository;
+    import com.event_management_system.repository.UserRepository;
 
 @Service
 public class EventService {
@@ -60,6 +61,23 @@ public class EventService {
 
     @Autowired
     private org.springframework.core.task.TaskExecutor taskExecutor;
+
+        
+        @Transactional(readOnly = true)
+        public java.util.List<EventAttendees> getAttendeesForEvent(@NonNull Long eventId, @NonNull Long currentUserId) {
+            Event event = getEventEntityById(eventId, currentUserId);
+            return eventAttendeesRepository.findByEvent(event);
+        }
+
+        @Transactional(readOnly = true)
+        public Event getEventEntityById(@NonNull Long eventId, @NonNull Long currentUserId) {
+            Event event = eventRepository.findById(eventId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+            if (!canViewEvent(event, currentUserId)) {
+                throw new RuntimeException("You don't have permission to view this event");
+            }
+            return event;
+        }
 
     @Transactional
     public EventResponseDTO createEvent(@NonNull EventRequestDTO eventRequestDTO, @NonNull Long currentUserId) {
@@ -116,6 +134,15 @@ public class EventService {
         });
 
         return eventMapper.toDto(savedEvent);
+    }
+
+   
+    @Transactional(readOnly = true)
+    public List<EventResponseDTO> findPublicUpcomingEvents() {
+        List<Event> events = eventRepository.findByVisibilityAndEventStatusAndDeletedFalse(
+            Event.Visibility.PUBLIC, Event.EventStatus.UPCOMING
+        );
+        return events.stream().map(eventMapper::toDto).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -404,6 +431,7 @@ public class EventService {
         return true;
     }
 
+    
     @Transactional
     public java.util.Map<String, Object> sendBulkInvitations(
             @NonNull Long eventId,
@@ -414,21 +442,18 @@ public class EventService {
 
         Event event = validateEvent(eventId, organizerId);
 
-        // Load registered users asynchronously
         java.util.concurrent.CompletableFuture<java.util.List<com.event_management_system.dto.InviteAttendeeRequestDTO>> usersFuture =
                 java.util.concurrent.CompletableFuture.supplyAsync(
                         () -> loadRegisteredUsers(organizerId),
                         taskExecutor
                 );
 
-        // Load external invites from CSV and temp_email table asynchronously
         java.util.concurrent.CompletableFuture<java.util.List<com.event_management_system.dto.InviteAttendeeRequestDTO>> csvFuture =
                 java.util.concurrent.CompletableFuture.supplyAsync(
                         () -> loadExternalInvites(file),
                         taskExecutor
                 );
 
-        // Combine both futures in parallel
         java.util.List<com.event_management_system.dto.InviteAttendeeRequestDTO> invitations =
                 usersFuture.thenCombine(csvFuture, (users, external) -> {
                     java.util.List<com.event_management_system.dto.InviteAttendeeRequestDTO> combined = new java.util.ArrayList<>(users);
@@ -443,7 +468,6 @@ public class EventService {
 
         log.info("[EventService] INFO - Starting bulk invitations for eventId={}, totalInvitations={}", eventId, invitations.size());
 
-        // Fire-and-forget async processing
         processBulkInvitationsAsync(event, invitations);
 
         return java.util.Map.of(
@@ -453,8 +477,7 @@ public class EventService {
                 "eventId", eventId
         );
     }
-
-    /* ============ VALIDATION ============ */
+    
 
     private Event validateEvent(Long eventId, Long organizerId) {
         log.debug("[EventService] DEBUG - validateEvent() for eventId={}, organizerId={}", eventId, organizerId);
@@ -480,8 +503,8 @@ public class EventService {
         return event;
     }
 
-    /* ============ LOAD USERS ============ */
 
+    
     private java.util.List<com.event_management_system.dto.InviteAttendeeRequestDTO> loadRegisteredUsers(Long organizerId) {
         log.debug("[EventService] DEBUG - loadRegisteredUsers() started");
 
@@ -526,8 +549,8 @@ public class EventService {
                 new java.io.InputStreamReader(file.getInputStream()))) {
 
             java.util.List<String> emails = br.lines()
-                    .skip(1)  // Skip header
-                    .filter(line -> !line.trim().isEmpty())  // Filter empty lines
+                    .skip(1)  
+                    .filter(line -> !line.trim().isEmpty())  
                     .map(line -> line.split(",")[0].trim().toLowerCase())
                     .filter(email -> email.contains("@"))
                     .collect(java.util.stream.Collectors.toList());
@@ -540,11 +563,9 @@ public class EventService {
             throw new RuntimeException("Failed to process CSV file", e);
         }
     }
+    
 
-    /* ============ ASYNC PROCESSING ============ */
-
-    /* ============ ASYNC PROCESSING ============ */
-
+   
     @Async("taskExecutor")
     public void processBulkInvitationsAsync(
             Event event,
@@ -554,7 +575,6 @@ public class EventService {
                 event.getId(), invitations.size());
 
         try {
-            // Create CompletableFuture for each invitation using Stream API (NO traditional loops)
             java.util.List<java.util.concurrent.CompletableFuture<Boolean>> tasks = invitations.stream()
                     .map(invite -> java.util.concurrent.CompletableFuture.supplyAsync(
                             () -> processInvitation(event, invite),
@@ -563,12 +583,10 @@ public class EventService {
 
             log.debug("[EventService] DEBUG - Created {} CompletableFuture tasks for parallel processing", tasks.size());
 
-            // Wait for all tasks to complete
             java.util.concurrent.CompletableFuture.allOf(tasks.toArray(new java.util.concurrent.CompletableFuture[0])).join();
 
             log.debug("[EventService] DEBUG - All parallel tasks completed");
 
-            // Count successes safely (without exceptions)
             long successCount = tasks.stream()
                     .map(task -> {
                         try {
@@ -585,20 +603,14 @@ public class EventService {
             log.info("[EventService] INFO - processBulkInvitationsAsync() completed for eventId={}, successful={}, failed={}",
                     event.getId(), successCount, failureCount);
 
-            // Clean up temp_email table after processing
-            int deletedCount = clearTempEmailTable();
-            log.info("[EventService] INFO - Cleaned up temp_email table, deleted {} records", deletedCount);
-
         } catch (Exception e) {
             log.error("[EventService] ERROR - Exception in processBulkInvitationsAsync(): {}", e.getMessage());
             log.error("[EventService] ERROR - Stack trace: ", e);
-            // Still clean up even if processing fails
-            clearTempEmailTable();
         }
     }
+    
 
-    /* ============ SINGLE INVITATION ============ */
-
+   
     private boolean processInvitation(Event event, com.event_management_system.dto.InviteAttendeeRequestDTO invite) {
         log.debug("[EventService] DEBUG - processInvitation() started for email: {}", invite.getEmail());
 
@@ -655,6 +667,7 @@ public class EventService {
             return false;
         }
     }
+    
 
     @Transactional
     public EventResponseDTO processEventAction(@NonNull Long eventId,
@@ -741,6 +754,8 @@ public class EventService {
         }
 
         boolean accepted;
+        String tempPassword = null;  // Store for credentials email later
+        
         if ("ACCEPT".equalsIgnoreCase(action)) {
             attendee.setInvitationStatus(EventAttendees.InvitationStatus.ACCEPTED);
             accepted = true;
@@ -758,30 +773,15 @@ public class EventService {
                     );
                     
                     User newUser = (User) accountInfo.get("user");
-                    String tempPassword = (String) accountInfo.get("password");
+                    tempPassword = (String) accountInfo.get("password");
                     
                     attendee.setUser(newUser);
-                    
-                    log.debug("[EventService] DEBUG - Sending credentials email to: {}", attendee.getEmail());
-                    
-                    boolean emailSent = emailService.sendAutoAccountCredentials(
-                        attendee.getEmail(),
-                        newUser.getFullName(),
-                        tempPassword
-                    );
-                    
-                    if (emailSent) {
-                        log.info("[EventService] INFO - Auto account created and credentials email sent: email={}, userId={}", 
-                                 attendee.getEmail(), newUser.getId());
-                    } else {
-                        log.warn("[EventService] WARN - Auto account created but email failed to send: email={}, userId={}", 
-                                 attendee.getEmail(), newUser.getId());
-                    }
+                    log.info("[EventService] INFO - ✅ Auto account created: email={}, userId={}", 
+                             attendee.getEmail(), newUser.getId());
                     
                 } catch (Exception e) {
                     log.error("[EventService] ERROR - Failed to auto-create account for invitee: email={}, error={}", 
                              attendee.getEmail(), e.getMessage(), e);
-                    
                 }
             }
 
@@ -798,7 +798,44 @@ public class EventService {
         attendee.recordUpdate("system");
         eventAttendeesRepository.save(attendee);
 
+        log.info("[EventService] INFO - Sending invitation response confirmation to: {}", attendee.getEmail());
         emailService.sendInvitationResponseConfirmation(attendee.getEvent(), attendee.getEmail(), accepted);
+
+        if (accepted && attendee.getUser() != null && tempPassword != null) {
+            try {
+                final String finalEmail = attendee.getEmail();
+                final String finalFullName = attendee.getUser().getFullName();
+                final String finalPassword = tempPassword;
+                final Long finalUserId = attendee.getUser().getId();
+                
+                log.info("[EventService] INFO - Waiting 1 second before sending credentials email...");
+                Thread.sleep(1000);
+                
+                log.debug("[EventService] DEBUG - Sending credentials email to: {}", finalEmail);
+                log.info("[EventService] INFO - Starting credentials email send with retry for: {}", finalEmail);
+                
+                boolean emailSent = emailService.sendWithRetry(
+                    () -> emailService.sendAutoAccountCredentials(
+                        finalEmail,
+                        finalFullName,
+                        finalPassword
+                    ),
+                    finalEmail,
+                    5
+                );
+                
+                if (emailSent) {
+                    log.info("[EventService] INFO - ✅ SUCCESS: Credentials email sent after confirmation: email={}, userId={}", 
+                             finalEmail, finalUserId);
+                } else {
+                    log.warn("[EventService] WARN - ⚠️ FAILED: Credentials email send failed after 5 retries: email={}, userId={}", 
+                             finalEmail, finalUserId);
+                }
+            } catch (Exception e) {
+                log.error("[EventService] ERROR - Exception sending credentials email: email={}, error={}", 
+                         attendee.getEmail(), e.getMessage(), e);
+            }
+        }
     }
 
     @Transactional
@@ -852,12 +889,7 @@ public class EventService {
         log.info("[EventService] INFO - Event reactivated: eventId={}, userId={}", eventId, userId);
     }
 
-    // ==================== Temp Email Table Operations (JdbcTemplate) ====================
-
-    /**
-     * Insert external emails into temp_email table
-     * Bulk insert without loops for high performance
-     */
+    
     public int insertEmailsToTempTable(List<String> emails) {
         log.debug("[EventService] DEBUG - insertEmailsToTempTable() called with {} emails", emails.size());
         
@@ -876,9 +908,7 @@ public class EventService {
         return inserted;
     }
 
-    /**
-     * Fetch all pending emails from temp_email table
-     */
+    
     public List<String> fetchPendingEmails() {
         log.debug("[EventService] DEBUG - fetchPendingEmails() called");
         
@@ -895,9 +925,7 @@ public class EventService {
         }
     }
 
-    /**
-     * Delete email from temp_email table after processing
-     */
+   
     public boolean deleteEmailFromTempTable(String email) {
         log.debug("[EventService] DEBUG - deleteEmailFromTempTable() called for: {}", email);
         
@@ -917,41 +945,6 @@ public class EventService {
         } catch (Exception e) {
             log.error("[EventService] ERROR - Failed to delete email from temp_email: {}", e.getMessage());
             return false;
-        }
-    }
-
-    /**
-     * Get count of emails in temp_email table
-     */
-    public long getTempEmailCount() {
-        log.debug("[EventService] DEBUG - getTempEmailCount() called");
-        
-        try {
-            Long count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM temp_email", 
-                Long.class
-            );
-            log.debug("[EventService] DEBUG - Current temp_email count: {}", count);
-            return count != null ? count : 0;
-        } catch (Exception e) {
-            log.error("[EventService] ERROR - Failed to get temp_email count: {}", e.getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * Clear all emails from temp_email table
-     */
-    public int clearTempEmailTable() {
-        log.debug("[EventService] DEBUG - clearTempEmailTable() called");
-        
-        try {
-            int rowsDeleted = jdbcTemplate.update("DELETE FROM temp_email");
-            log.info("[EventService] INFO - Cleared temp_email table, deleted {} records", rowsDeleted);
-            return rowsDeleted;
-        } catch (Exception e) {
-            log.error("[EventService] ERROR - Failed to clear temp_email table: {}", e.getMessage());
-            return 0;
         }
     }
 

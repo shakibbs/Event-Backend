@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import com.event_management_system.dto.UserRequestDTO;
 import com.event_management_system.dto.UserResponseDTO;
+import com.event_management_system.dto.UserUpdateRequestDTO;
 import com.event_management_system.entity.Permission;
 import com.event_management_system.entity.Role;
 import com.event_management_system.entity.User;
@@ -32,8 +32,15 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Service
-@DependsOn({ "permissionService", "roleService" })
 public class UserService {
+
+        @Autowired
+        private UserLoginLogoutHistoryService loginLogoutHistoryService;
+    
+    @Transactional(readOnly = true)
+    public Optional<User> getUserEntityByEmail(@NonNull String email) {
+        return userRepository.findByEmail(email);
+    }
 
     @Autowired
     private ApplicationLoggerService log;
@@ -135,6 +142,53 @@ public class UserService {
         return userMapper.toDto(savedUser);
     }
 
+    @Transactional
+    public UserResponseDTO selfRegisterAttendee(UserRequestDTO userRequestDTO) {
+        log.trace("[UserService] TRACE - selfRegisterAttendee() called with email=" + userRequestDTO.getEmail());
+
+        if (userRepository.findByEmail(userRequestDTO.getEmail()).isPresent()) {
+            log.warn("[UserService] WARN - Self-registration failed: Email already exists - " + userRequestDTO.getEmail());
+            throw new RuntimeException("Email already registered");
+        }
+
+        log.debug("[UserService] DEBUG - selfRegisterAttendee() - Fetching ATTENDEE role");
+        Role attendeeRole = roleRepository.findByName("ATTENDEE")
+                .orElseThrow(() -> {
+                    log.error("[UserService] ERROR - ATTENDEE role not found in system");
+                    return new RuntimeException("ATTENDEE role not found in system");
+                });
+
+        log.debug("[UserService] DEBUG - selfRegisterAttendee() - Creating user entity from DTO");
+        User user = userMapper.toEntity(userRequestDTO);
+        user.setRole(attendeeRole);
+        user.recordCreation("self-registration");
+
+        User savedUser = userRepository.save(user);
+
+        log.info("[UserService] INFO - User self-registered successfully: userId=" + savedUser.getId() + ", email="
+                + savedUser.getEmail() + ", role=ATTENDEE");
+
+        log.debug("[UserService] DEBUG - selfRegisterAttendee() - Skipping password history (self-registration context)");
+
+        try {
+            String ipAddress = getClientIp();
+            String deviceId = getDeviceId();
+            String sessionId = getSessionId();
+
+            activityHistoryService.recordActivity(
+                    savedUser,
+                    UserActivityHistory.ActivityType.USER_CREATED,
+                    "User self-registered: " + savedUser.getFullName() + " (" + savedUser.getEmail() + ") with role: ATTENDEE",
+                    ipAddress,
+                    deviceId,
+                    sessionId);
+        } catch (Exception e) {
+            log.error("[UserService] ERROR - Failed to record self-registration activity: " + e.getMessage());
+        }
+
+        return userMapper.toDto(savedUser);
+    }
+
     @Transactional(readOnly = true)
     public Optional<UserResponseDTO> getUserById(@NonNull Long id) {
         return userRepository.findById(id)
@@ -164,7 +218,7 @@ public class UserService {
 
     @Transactional
     public Optional<UserResponseDTO> updateUser(@NonNull Long currentUserId, @NonNull Long targetUserId,
-            UserRequestDTO userRequestDTO) {
+            UserUpdateRequestDTO userUpdateRequestDTO) {
         log.trace("[UserService] TRACE - updateUser() called with currentUserId=" + currentUserId + ", targetUserId="
                 + targetUserId);
 
@@ -179,7 +233,7 @@ public class UserService {
             String oldEmail = existingUser.getEmail();
 
             log.debug("[UserService] DEBUG - updateUser() - Updating user entity");
-            userMapper.updateEntity(userRequestDTO, existingUser);
+            userMapper.updateEntity(userUpdateRequestDTO, existingUser);
             existingUser.recordUpdate("system");
             User updatedUser = userRepository.save(existingUser);
 
@@ -217,9 +271,7 @@ public class UserService {
 
     @Transactional
     public boolean deleteUser(@NonNull Long currentUserId, @NonNull Long targetUserId) {
-        log.trace("[UserService] TRACE - deleteUser() called with currentUserId=" + currentUserId + ", targetUserId="
-                + targetUserId);
-
+        log.trace("[UserService] TRACE - deleteUser() called with currentUserId=" + currentUserId + ", targetUserId=" + targetUserId);
         log.debug("[UserService] DEBUG - deleteUser() - Checking manage permission");
         if (!canManageUser(currentUserId, targetUserId)) {
             log.warn("[UserService] WARN - User " + currentUserId + " not authorized to delete user " + targetUserId);
@@ -230,12 +282,27 @@ public class UserService {
             String deletedUserName = user.getFullName();
             String deletedUserEmail = user.getEmail();
 
-            log.debug("[UserService] DEBUG - deleteUser() - Marking user as deleted");
-            user.markDeleted();
-            userRepository.save(user);
+            // Delete all related records first
+            try {
+                // Delete password history
+                passwordHistoryService.deleteAllByUserId(targetUserId);
+                // Delete login/logout history
+                if (loginLogoutHistoryService != null) {
+                    loginLogoutHistoryService.deleteAllByUserId(targetUserId);
+                }
+                // Delete activity history
+                activityHistoryService.deleteAllByUserId(targetUserId);
+                // Delete event attendees
+                eventAttendeesRepository.deleteAll(eventAttendeesRepository.findByUser(user));
+            } catch (Exception e) {
+                log.error("[UserService] ERROR - Failed to delete related records for userId=" + targetUserId + ": " + e.getMessage());
+                throw new RuntimeException("Failed to delete related records for userId=" + targetUserId, e);
+            }
 
-            log.info("[UserService] INFO - User deleted successfully: userId=" + targetUserId + ", email="
-                    + deletedUserEmail);
+            log.debug("[UserService] DEBUG - deleteUser() - Permanently deleting user from database");
+            userRepository.delete(user);
+
+            log.info("[UserService] INFO - User deleted successfully: userId=" + targetUserId + ", email=" + deletedUserEmail);
 
             try {
                 User currentUser = getCurrentUser();
@@ -348,7 +415,7 @@ public class UserService {
                         return hasIt;
                     }
 
-                    log.warn("User role or permissions is null");
+                    log.warn("User role or permissions is null - User ID: {}, Role: {}", userId, user.getRole() != null ? "null" : user.getRole().getName());
                     return false;
                 })
                 .orElse(false);
@@ -441,21 +508,24 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public boolean canManageUser(@NonNull Long currentUserId, @NonNull Long targetUserId) {
-        // SuperAdmin can manage all users
+        log.info("canManageUser called. currentUserId: {}, targetUserId: {}", currentUserId, targetUserId);
+        
         if (hasPermission(currentUserId, "user.manage.all")) {
+            log.info("User {} has user.manage.all permission - allowing management", currentUserId);
             return true;
         }
 
-        // Admin can only manage attendees (not other admins or super admins)
         if (hasPermission(currentUserId, "user.manage.own")) {
+            log.info("User {} has user.manage.own permission - checking if target is Attendee", currentUserId);
             return userRepository.findById(targetUserId)
                     .map(targetUser -> targetUser.getRole() != null &&
                             Objects.equals(targetUser.getRole().getName(), "Attendee"))
                     .orElse(false);
         }
 
-        // Users can manage themselves
-        return Objects.equals(currentUserId, targetUserId);
+        boolean selfManagement = Objects.equals(currentUserId, targetUserId);
+        log.info("User {} managing themselves: {}", currentUserId, selfManagement);
+        return selfManagement;
     }
 
     @Transactional(readOnly = true)
@@ -480,17 +550,14 @@ public class UserService {
     public boolean canViewEvent(@NonNull Long userId, @NonNull Long eventId) {
         return eventRepository.findById(eventId)
                 .map(event -> {
-                    // SuperAdmin can view all events
                     if (hasPermission(userId, "event.manage.all")) {
                         return true;
                     }
 
-                    // Admin can view all events
                     if (hasPermission(userId, "event.view.all")) {
                         return true;
                     }
 
-                    // Event organizer can view their own events
                     if (event.getOrganizer() != null && event.getOrganizer().getId().equals(userId)) {
                         return true;
                     }
@@ -499,7 +566,6 @@ public class UserService {
                         return switch (event.getVisibility()) {
                             case PUBLIC -> hasPermission(userId, "event.view.public");
                             case PRIVATE -> {
-                                // Private events visible if user has 'event.view.invited' AND is invited
                                 var user = userRepository.findById(userId).orElse(null);
                                 yield hasPermission(userId, "event.view.invited") &&
                                         (user != null && isUserInvitedToEvent(event, userId));
@@ -526,7 +592,6 @@ public class UserService {
             return;
         }
 
-        // Create only SuperAdmin user - other users must be created by SuperAdmin
         if (!userRepository.findByEmail("superadmin@ems.com").isPresent()) {
             User superAdmin = new User();
             superAdmin.setFullName("Super Admin");
@@ -534,7 +599,6 @@ public class UserService {
             superAdmin.setPassword(passwordEncoder.encode("SuperAdmin@123")); // BCrypt encoded
             superAdmin.recordCreation("system");
 
-            // Assign SuperAdmin role
             Optional<Role> superAdminRole = roleRepository.findByName("SuperAdmin");
             if (superAdminRole.isPresent()) {
                 superAdmin.setRole(superAdminRole.get());
@@ -547,14 +611,10 @@ public class UserService {
         }
     }
 
-    /**
-     * Auto-create a user account when non-registered user accepts event invitation
-     * Returns both the created user and the plain temporary password
-     */
+   
     public java.util.Map<String, Object> createAutoAccountForInvitee(String email, String fullName) {
         log.trace("[UserService] TRACE - createAutoAccountForInvitee() called with email={}", email);
 
-        // Check if user already exists
         if (userRepository.findByEmail(email).isPresent()) {
             log.warn("[UserService] WARN - User already exists with email={}", email);
             throw new RuntimeException("User already exists with this email");
@@ -562,11 +622,9 @@ public class UserService {
 
         log.debug("[UserService] DEBUG - Generating temporary password for email={}", email);
         
-        // Generate temporary password (10 characters: alphanumeric + special chars)
         String tempPassword = generateTemporaryPassword();
         log.debug("[UserService] DEBUG - Generated password length: {}", tempPassword.length());
 
-        // Get default "Attendee" role
         Role userRole = roleRepository.findByName("Attendee")
                 .orElseThrow(() -> {
                     log.warn("[UserService] WARN - Default 'Attendee' role not found");
@@ -575,7 +633,6 @@ public class UserService {
 
         log.debug("[UserService] DEBUG - Found User role: {}", userRole.getId());
 
-        // Create new user with hashed password
         User newUser = new User();
         newUser.setEmail(email.toLowerCase().trim());
         newUser.setFullName(fullName.trim());
@@ -590,7 +647,6 @@ public class UserService {
         log.info("[UserService] INFO - Auto account created: userId={}, email={}, role=Attendee, tempPassword=***",
                 savedUser.getId(), savedUser.getEmail());
 
-        // Return both user and plain password in a map
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("user", savedUser);
         result.put("password", tempPassword);
@@ -600,9 +656,7 @@ public class UserService {
         return result;
     }
 
-    /**
-     * Generate a temporary password (10 characters mix of upper, lower, numbers, special chars)
-     */
+    
     private String generateTemporaryPassword() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
         StringBuilder password = new StringBuilder();

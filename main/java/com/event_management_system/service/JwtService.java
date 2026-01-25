@@ -36,14 +36,22 @@ public class JwtService {
     public String generateAccessToken(Long userId) {
         return generateToken(userId, accessTokenExpiration);
     }
+    
+    public String generateAccessToken(Long userId, String roleName, Long roleId) {
+        return generateToken(userId, roleName, roleId, accessTokenExpiration);
+    }
 
    
     public String generateRefreshToken(Long userId) {
-        return generateToken(userId, refreshTokenExpiration);
+        return generateToken(userId, null, null, refreshTokenExpiration);
     }
 
    
     private String generateToken(Long userId, long duration) {
+        return generateToken(userId, null, null, duration);
+    }
+    
+    private String generateToken(Long userId, String roleName, Long roleId, long duration) {
         String tokenUuid = UUID.randomUUID().toString();
         log.debug("Generated token UUID: {} for user: {}", tokenUuid, userId);
 
@@ -51,7 +59,7 @@ public class JwtService {
         
         Date expirationDate = new Date(now.getTime() + duration);
 
-        String token = Jwts.builder()
+        var builder = Jwts.builder()
                 .subject(userId.toString())
                 
                 .claim("tokenUuid", tokenUuid)
@@ -60,11 +68,17 @@ public class JwtService {
                 
                 .expiration(expirationDate)
                 
-                .signWith(getSigningKey())
-                
-                .compact();
+                .signWith(getSigningKey());
+        
+        // Add role information if provided (for access tokens)
+        if (roleName != null) {
+            builder.claim("role", roleName);
+            builder.claim("roleId", roleId);
+        }
 
-        log.info("Generated token for user: {} with UUID: {}", userId, tokenUuid);
+        String token = builder.compact();
+
+        log.info("Generated token for user: {} with UUID: {} and role: {}", userId, tokenUuid, roleName);
         return token;
     }
 

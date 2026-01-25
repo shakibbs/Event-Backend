@@ -1,3 +1,4 @@
+
 package com.event_management_system.service;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,8 @@ import com.event_management_system.repository.UserPasswordHistoryRepository;
 
 @Service
 public class UserPasswordHistoryService {
+
+    
     
     @Autowired
     private UserPasswordHistoryRepository passwordHistoryRepository;
@@ -56,6 +59,19 @@ public class UserPasswordHistoryService {
                 .collect(Collectors.toList());
     }
     
+
+    @Transactional(readOnly = true)
+    public List<UserPasswordHistoryResponseDTO> getAllPasswordHistory() {
+        List<UserPasswordHistory> history = passwordHistoryRepository.findAll();
+        return history.stream()
+                .map(passwordHistoryMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+        @Transactional
+        public void deleteAllByUserId(Long userId) {
+            passwordHistoryRepository.deleteAll(passwordHistoryRepository.findByUserId(userId));
+        }
   
     @Transactional(readOnly = true)
     public List<UserPasswordHistoryResponseDTO> getRecentPasswordChanges(

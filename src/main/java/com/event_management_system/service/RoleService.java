@@ -200,7 +200,7 @@ public class RoleService {
         }
 
         createRoleWithPermissions("SuperAdmin", 
-                "user.manage.all", "role.manage.all", "event.manage.all", "event.approve", 
+                "user.manage.all", "user.view.all", "role.manage.all", "event.manage.all", "event.approve", 
                 "event.hold", "event.reactivate", "system.config", "history.view.all");
 
         createRoleWithPermissions("Admin", 

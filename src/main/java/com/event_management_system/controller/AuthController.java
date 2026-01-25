@@ -16,10 +16,13 @@ import com.event_management_system.dto.AuthResponseDTO;
 import com.event_management_system.dto.ChangePasswordRequestDTO;
 import com.event_management_system.dto.LoginRequestDTO;
 import com.event_management_system.dto.RefreshTokenRequestDTO;
+import com.event_management_system.dto.UserRequestDTO;
+import com.event_management_system.dto.UserResponseDTO;
 import com.event_management_system.entity.User;
 import com.event_management_system.repository.UserRepository;
 import com.event_management_system.service.ApplicationLoggerService;
 import com.event_management_system.service.AuthService;
+import com.event_management_system.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,6 +36,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+    
+    @Autowired
+    private UserService userService;
     
     @Autowired
     private UserRepository userRepository;
@@ -62,6 +68,33 @@ public class AuthController {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
             log.error("[AuthController] ERROR - login() - Failed to login: email=" + loginRequest.getEmail() + ": " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @PostMapping("/register")
+    @Operation(
+            summary = "Self-register as attendee",
+            description = "Allow a non-registered user to self-register as an attendee. Automatically assigns ATTENDEE role. roleId field in request body is ignored."
+    )
+    public ResponseEntity<UserResponseDTO> selfRegister(
+            @Parameter(description = "Registration request with fullName, email, password. roleId field is ignored - ATTENDEE role is always assigned.")
+            @Valid @RequestBody UserRequestDTO registerRequest) {
+        
+        try {
+            log.trace("[AuthController] TRACE - selfRegister() called with email=" + registerRequest.getEmail() + ", timestamp=" + System.currentTimeMillis());
+            log.debug("[AuthController] DEBUG - selfRegister() - POST /api/auth/register - Self-registration attempt: email=" + registerRequest.getEmail());
+            
+            UserResponseDTO registeredUser = userService.selfRegisterAttendee(registerRequest);
+            log.info("[AuthController] INFO - selfRegister() - User self-registered successfully: userId=" + registeredUser.getId() + ", email=" + registerRequest.getEmail() + ", role=ATTENDEE");
+            
+            return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
+            
+        } catch (RuntimeException e) {
+            log.warn("[AuthController] WARN - selfRegister() - Self-registration failed: email=" + registerRequest.getEmail() + ", error=" + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            log.error("[AuthController] ERROR - selfRegister() - Failed to self-register: email=" + registerRequest.getEmail() + ": " + e.getMessage());
             throw e;
         }
     }

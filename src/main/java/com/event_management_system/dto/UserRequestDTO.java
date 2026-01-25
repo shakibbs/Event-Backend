@@ -21,5 +21,6 @@ public class UserRequestDTO {
     @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 
+    // Note: roleId is only used for admin user creation. For self-registration, ATTENDEE role is automatically assigned.
     private Long roleId;
 }

@@ -76,58 +76,36 @@ public class HistoryController {
     }
     
     
+    
     @GetMapping("/login")
     @Operation(
         summary = "Get login/logout history",
-        description = "Retrieves all login and logout events for the authenticated user or specified user (SuperAdmin only)"
+        description = "Retrieves all login and logout events for the authenticated user, a specific user (SuperAdmin only), or all users (SuperAdmin only)"
     )
     public ResponseEntity<List<UserLoginLogoutHistoryResponseDTO>> getLoginHistory(
             @Parameter(description = "Target user ID (SuperAdmin only)")
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId,
+            @Parameter(description = "All users (SuperAdmin only)")
+            @RequestParam(required = false, defaultValue = "false") boolean all) {
         try {
-            Long targetUserId = (userId != null) ? userId : getCurrentUserId();
+            Long currentUserId = getCurrentUserId();
+            boolean isSuperAdmin = userService.hasPermission(currentUserId, "history.view.all");
+            if (all && isSuperAdmin) {
+                log.info("[HistoryController] INFO - getLoginHistory() - Fetching ALL login/logout history (SuperAdmin)");
+                List<UserLoginLogoutHistoryResponseDTO> history = loginHistoryService.getAllLoginHistory();
+                return new ResponseEntity<>(history, HttpStatus.OK);
+            }
+            Long targetUserId = (userId != null) ? userId : currentUserId;
             Objects.requireNonNull(targetUserId, "Target user ID should not be null");
-            
             canViewUserHistory(targetUserId);
-            
             log.info("[HistoryController] INFO - getLoginHistory() - Fetching login history for user: {}", targetUserId);
-            
             List<UserLoginLogoutHistoryResponseDTO> history = loginHistoryService.getLoginHistory(targetUserId);
-            
             return new ResponseEntity<>(history, HttpStatus.OK);
         } catch (RuntimeException e) {
             log.error("[HistoryController] ERROR - getLoginHistory() - Failed to fetch login history: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         } catch (Exception e) {
             log.error("[HistoryController] ERROR - getLoginHistory() - Failed to fetch login history: {}", e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    
-    @GetMapping("/login/active")
-    @Operation(
-        summary = "Get active sessions",
-        description = "Retrieves all currently active login sessions (where logout_time is NULL)"
-    )
-    public ResponseEntity<List<UserLoginLogoutHistoryResponseDTO>> getActiveSessions(
-            @Parameter(description = "Target user ID (SuperAdmin only)")
-            @RequestParam(required = false) Long userId) {
-        try {
-            Long targetUserId = Objects.requireNonNull(
-                (userId != null) ? userId : getCurrentUserId(),
-                "Target user ID should not be null");
-            canViewUserHistory(targetUserId);
-            
-            log.info("[HistoryController] INFO - getActiveSessions() - Fetching active sessions for user: {}", targetUserId);
-            
-            List<UserLoginLogoutHistoryResponseDTO> activeSessions = loginHistoryService.getActiveSessions(targetUserId);
-            
-            return new ResponseEntity<>(activeSessions, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            log.error("[HistoryController] ERROR - getActiveSessions() - Failed to fetch active sessions: {}", e.getMessage());
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        } catch (Exception e) {
-            log.error("[HistoryController] ERROR - getActiveSessions() - Failed to fetch active sessions: {}", e.getMessage());
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -184,24 +162,30 @@ public class HistoryController {
     }
     
     
+    
     @GetMapping("/password")
     @Operation(
         summary = "Get password change history",
-        description = "Retrieves all password changes for the authenticated user or specified user (SuperAdmin only) - passwords are never exposed"
+        description = "Retrieves all password changes for the authenticated user, a specific user (SuperAdmin only), or all users (SuperAdmin only) - passwords are never exposed"
     )
     public ResponseEntity<List<UserPasswordHistoryResponseDTO>> getPasswordHistory(
             @Parameter(description = "Target user ID (SuperAdmin only)")
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId,
+            @Parameter(description = "All users (SuperAdmin only)")
+            @RequestParam(required = false, defaultValue = "false") boolean all) {
         try {
-            Long targetUserId = (userId != null) ? userId : getCurrentUserId();
+            Long currentUserId = getCurrentUserId();
+            boolean isSuperAdmin = userService.hasPermission(currentUserId, "history.view.all");
+            if (all && isSuperAdmin) {
+                log.info("[HistoryController] INFO - getPasswordHistory() - Fetching ALL password change history (SuperAdmin)");
+                List<UserPasswordHistoryResponseDTO> history = passwordHistoryService.getAllPasswordHistory();
+                return new ResponseEntity<>(history, HttpStatus.OK);
+            }
+            Long targetUserId = (userId != null) ? userId : currentUserId;
             Objects.requireNonNull(targetUserId, "Target user ID should not be null");
-            
             canViewUserHistory(targetUserId);
-            
             log.info("[HistoryController] INFO - getPasswordHistory() - Fetching password history for user: {}", targetUserId);
-            
             List<UserPasswordHistoryResponseDTO> history = passwordHistoryService.getPasswordHistory(targetUserId);
-            
             return new ResponseEntity<>(history, HttpStatus.OK);
         } catch (RuntimeException e) {
             log.error("[HistoryController] ERROR - getPasswordHistory() - Failed to fetch password history: {}", e.getMessage());
@@ -212,51 +196,34 @@ public class HistoryController {
         }
     }
     
-    @GetMapping("/password/recent")
-    @Operation(
-        summary = "Get recent password changes",
-        description = "Retrieves password changes within the last N days"
-    )
-    public ResponseEntity<List<UserPasswordHistoryResponseDTO>> getRecentPasswordChanges(
-            @Parameter(description = "Number of days to look back")
-            @RequestParam(defaultValue = "30") int days) {
-        
-        try {
-            Long userId = getCurrentUserId();
-            Objects.requireNonNull(userId, "User ID should not be null");
-            
-            log.info("[HistoryController] INFO - getRecentPasswordChanges() - Fetching password changes for user {} in last {} days", userId, days);
-            
-            List<UserPasswordHistoryResponseDTO> history = 
-                passwordHistoryService.getRecentPasswordChanges(userId, days);
-            
-            return new ResponseEntity<>(history, HttpStatus.OK);
-        } catch (Exception e) {
-            log.error("[HistoryController] ERROR - getRecentPasswordChanges() - Failed to fetch recent password changes: {}", e.getMessage());
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    
     
     
     @GetMapping("/activity")
     @Operation(
         summary = "Get activity history",
-        description = "Retrieves all activities for the authenticated user or specified user (SuperAdmin only)"
+        description = "Retrieves all activities for the authenticated user, a specific user (SuperAdmin only), or all users (SuperAdmin only)"
     )
     public ResponseEntity<List<UserActivityHistoryResponseDTO>> getActivityHistory(
             @Parameter(description = "Target user ID (SuperAdmin only)")
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId,
+            @Parameter(description = "All users (SuperAdmin only)")
+            @RequestParam(required = false, defaultValue = "false") boolean all) {
         try {
-            Long targetUserId = (userId != null) ? userId : getCurrentUserId();
+            Long currentUserId = getCurrentUserId();
+            boolean isSuperAdmin = userService.hasPermission(currentUserId, "history.view.all");
+
+            if (all && isSuperAdmin) {
+                log.info("[HistoryController] INFO - getActivityHistory() - Fetching ALL activity history (SuperAdmin)");
+                List<UserActivityHistoryResponseDTO> activities = activityHistoryService.getAllActivityHistory();
+                return new ResponseEntity<>(activities, HttpStatus.OK);
+            }
+
+            Long targetUserId = (userId != null) ? userId : currentUserId;
             Objects.requireNonNull(targetUserId, "Target user ID should not be null");
-            
             canViewUserHistory(targetUserId);
-            
+
             log.info("[HistoryController] INFO - getActivityHistory() - Fetching activity history for user: {}", targetUserId);
-            
             List<UserActivityHistoryResponseDTO> activities = activityHistoryService.getActivityHistory(targetUserId);
-            
             return new ResponseEntity<>(activities, HttpStatus.OK);
         } catch (RuntimeException e) {
             log.error("[HistoryController] ERROR - getActivityHistory() - Failed to fetch activity history: {}", e.getMessage());

@@ -49,4 +49,6 @@ public class EventResponseDTO {
     private Event.EventStatus eventStatus;
 
     private Boolean deleted;
+
+    private Long attendees;
 }

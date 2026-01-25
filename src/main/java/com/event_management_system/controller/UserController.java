@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.event_management_system.dto.UserRequestDTO;
 import com.event_management_system.dto.UserResponseDTO;
+import com.event_management_system.dto.UserUpdateRequestDTO;
 import com.event_management_system.entity.User;
 import com.event_management_system.service.ApplicationLoggerService;
 import com.event_management_system.service.UserService;
@@ -87,15 +88,17 @@ public class UserController {
     @Operation(summary = "Update a user", description = "Updates an existing user with provided details")
     public ResponseEntity<UserResponseDTO> updateUser(
             @Parameter(description = "ID of user to update") @PathVariable @NonNull Long userId,
-            @Valid @RequestBody @NonNull UserRequestDTO userRequestDTO,
+            @Valid @RequestBody @NonNull UserUpdateRequestDTO userUpdateRequestDTO,
             Authentication authentication) {
         
         try {
-            log.trace("[UserController] TRACE - updateUser() called with userId=" + userId + ", email=" + userRequestDTO.getEmail());
-            log.debug("[UserController] DEBUG - updateUser() - PUT /api/users/" + userId + " - Updating user: email=" + userRequestDTO.getEmail());
-            User currentUser = (User) authentication.getPrincipal();
+            log.trace("[UserController] TRACE - updateUser() called with userId=" + userId + ", email=" + userUpdateRequestDTO.getEmail());
+            log.debug("[UserController] DEBUG - updateUser() - PUT /api/users/" + userId + " - Updating user: email=" + userUpdateRequestDTO.getEmail());
+            String email = authentication.getName();
+                User currentUser = userService.getUserEntityByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Current user not found: " + email));
             log.debug("[UserController] DEBUG - updateUser() - User authenticated: userId=" + currentUser.getId());
-            var result = userService.updateUser(currentUser.getId(), userId, userRequestDTO);
+            var result = userService.updateUser(currentUser.getId(), userId, userUpdateRequestDTO);
            
             if (result.isPresent()) {
                 log.info("[UserController] INFO - updateUser() - User updated successfully: userId=" + userId + ", email=" + result.get().getEmail());
@@ -122,8 +125,11 @@ public class UserController {
         try {
             log.trace("[UserController] TRACE - deleteUser() called with userId=" + userId + ", timestamp=" + System.currentTimeMillis());
             log.debug("[UserController] DEBUG - deleteUser() - DELETE /api/users/" + userId + " - Deleting user");
-            User currentUser = (User) authentication.getPrincipal();
-            log.debug("[UserController] DEBUG - deleteUser() - User authenticated: userId=" + currentUser.getId());
+            String email = authentication.getName();
+            log.debug("[UserController] DEBUG - deleteUser() - Authenticated email: " + email);
+            User currentUser = userService.getUserEntityByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Current user not found: " + email));
+            log.debug("[UserController] DEBUG - deleteUser() - User authenticated: userId=" + currentUser.getId() + ", role=" + (currentUser.getRole() != null ? currentUser.getRole().getName() : "null"));
             boolean deleted = userService.deleteUser(currentUser.getId(), userId);
            
             if (deleted) {

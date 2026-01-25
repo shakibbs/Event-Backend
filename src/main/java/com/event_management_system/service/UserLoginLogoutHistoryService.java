@@ -1,3 +1,4 @@
+
 package com.event_management_system.service;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,13 @@ import com.event_management_system.repository.UserLoginLogoutHistoryRepository;
 
 @Service
 public class UserLoginLogoutHistoryService {
+
+      
+
+        @Transactional
+        public void deleteAllByUserId(Long userId) {
+                loginHistoryRepository.deleteAll(loginHistoryRepository.findByUserId(userId));
+        }
     
     @Autowired
     private UserLoginLogoutHistoryRepository loginHistoryRepository;
@@ -49,6 +57,15 @@ public class UserLoginLogoutHistoryService {
         UserLoginLogoutHistory saved = loginHistoryRepository.save(history);
         return Objects.requireNonNull(saved, "Saved login history should not be null");
     }
+
+
+      @Transactional(readOnly = true)
+        public List<UserLoginLogoutHistoryResponseDTO> getAllLoginHistory() {
+                List<UserLoginLogoutHistory> history = loginHistoryRepository.findAll();
+                return history.stream()
+                                .map(loginHistoryMapper::toDto)
+                                .collect(Collectors.toList());
+        }
     
     
     @Transactional

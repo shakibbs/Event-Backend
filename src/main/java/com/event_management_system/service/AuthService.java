@@ -74,8 +74,10 @@ public class AuthService {
         log.info("[AuthService] INFO - Password validated successfully for userId=" + user.getId());
 
         log.debug("[AuthService] DEBUG - authenticate() - Generating access token");
-        String accessToken = jwtService.generateAccessToken(user.getId());
-        log.debug("[AuthService] DEBUG - authenticate() - Access token generated for userId=" + user.getId());
+        String roleName = user.getRole() != null ? user.getRole().getName() : "USER";
+        Long roleId = user.getRole() != null ? user.getRole().getId() : null;
+        String accessToken = jwtService.generateAccessToken(user.getId(), roleName, roleId);
+        log.debug("[AuthService] DEBUG - authenticate() - Access token generated for userId=" + user.getId() + " with role=" + roleName);
 
         log.debug("[AuthService] DEBUG - authenticate() - Generating refresh token");
         String refreshToken = jwtService.generateRefreshToken(user.getId());

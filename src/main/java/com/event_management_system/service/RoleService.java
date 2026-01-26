@@ -174,17 +174,33 @@ public class RoleService {
     
     @Transactional
     public boolean removePermissionFromRole(@NonNull Long roleId, @NonNull Long permissionId) {
+        log.debug("[RoleService] DEBUG - removePermissionFromRole() called with roleId={} and permissionId={}", roleId, permissionId);
         Optional<Role> roleOpt = roleRepository.findById(roleId);
-        Optional<Permission> permissionOpt = permissionRepository.findById(permissionId);
-        
-        if (roleOpt.isPresent() && permissionOpt.isPresent()) {
+        Optional<Permission> permOpt = permissionRepository.findById(permissionId);
+        if (roleOpt.isPresent() && permOpt.isPresent()) {
             Role role = roleOpt.get();
-            Permission permission = permissionOpt.get();
-            
-            rolePermissionRepository.deleteByRoleAndPermission(role, permission);
-            return true;
+            Permission permission = permOpt.get();
+            RolePermission.RolePermissionId id = new RolePermission.RolePermissionId(roleId, permissionId);
+            RolePermission toRemove = null;
+            for (RolePermission rp : role.getRolePermissions()) {
+                if (rp.getId().equals(id)) {
+                    toRemove = rp;
+                    break;
+                }
+            }
+            if (toRemove != null) {
+                role.getRolePermissions().remove(toRemove);
+                rolePermissionRepository.deleteById(id);
+                log.info("[RoleService] INFO - RolePermission deleted for roleId={}, permissionId={}", roleId, permissionId);
+                return true;
+            } else {
+                log.warn("[RoleService] WARN - No RolePermission found in role entity for roleId={}, permissionId={}", roleId, permissionId);
+                return false;
+            }
+        } else {
+            log.warn("[RoleService] WARN - Role or Permission not found for roleId={}, permissionId={}", roleId, permissionId);
+            return false;
         }
-        return false;
     }
     
     @Transactional

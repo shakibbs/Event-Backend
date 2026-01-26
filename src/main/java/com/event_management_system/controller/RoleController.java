@@ -151,10 +151,9 @@ public class RoleController {
             log.trace("[RoleController] TRACE - removePermissionFromRole() called with roleId=" + roleId + ", permissionId=" + permissionId + ", timestamp=" + System.currentTimeMillis());
             log.debug("[RoleController] DEBUG - removePermissionFromRole() - DELETE /api/roles/" + roleId + "/permissions/" + permissionId + " - Removing permission from role");
             boolean removed = roleService.removePermissionFromRole(roleId, permissionId);
-            
             if (removed) {
                 log.info("[RoleController] INFO - removePermissionFromRole() - Permission removed from role successfully: roleId=" + roleId + ", permissionId=" + permissionId);
-                return new ResponseEntity<>(HttpStatus.OK);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             } else {
                 log.warn("[RoleController] WARN - removePermissionFromRole() - Role or permission not found for removal: roleId=" + roleId + ", permissionId=" + permissionId);
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);

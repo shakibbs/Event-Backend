@@ -44,7 +44,6 @@ public class SecurityConfig {
                 // CORS configuration
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfig = new org.springframework.web.cors.CorsConfiguration();
-                    // Explicitly allow frontend on port 5173 and any localhost port for development
                     corsConfig.setAllowedOriginPatterns(java.util.List.of("http://localhost:5173", "http://localhost:*"));
                     corsConfig.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                     corsConfig.setAllowedHeaders(java.util.List.of("*"));

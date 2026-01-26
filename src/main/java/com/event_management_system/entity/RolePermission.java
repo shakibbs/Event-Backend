@@ -15,10 +15,12 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "role_permissions")
 @Data
+@ToString(exclude = {"role", "permission"})
 @NoArgsConstructor
 public class RolePermission {
 
@@ -47,21 +49,18 @@ public class RolePermission {
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
-    @Column(nullable = false, name = "deleted")
-    private Boolean deleted = false;
+
 
     public RolePermission(Role role, Permission permission) {
         this.role = role;
         this.permission = permission;
         this.id = new RolePermissionId(role.getId(), permission.getId());
         this.createdBy = "system";
-        this.deleted = false;
         this.createdAt = LocalDateTime.now();
     }
 
     public void recordCreation(String user) {
         this.createdBy = user;
-        this.deleted = false;
         this.createdAt = LocalDateTime.now();
     }
 

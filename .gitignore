@@ -1,7 +1,11 @@
 # Ignore IDE and build directories
 .idea/
 .vscode/
-.mvn/
+mvnw
+mvnw.cmd
+# .mvn/wrapper should be committed for Maven Wrapper
+# Remove the following line to allow .mvn/wrapper to be committed
+# .mvn/
 target/
 build/
 *.iml

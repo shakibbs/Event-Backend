@@ -1,0 +1,572 @@
+2026-01-26 12:24:08.054 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthController] DEBUG - login() - POST /api/auth/login - Login attempt: email=shakib@yopmail.com
+2026-01-26 12:24:08.056 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Validating input parameters
+2026-01-26 12:24:08.057 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Searching for user with email: shakib@yopmail.com
+2026-01-26 12:24:08.180 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - User found: userId=2
+2026-01-26 12:24:08.181 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Validating password for userId=2
+2026-01-26 12:24:08.452 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - [AuthService] INFO - Password validated successfully for userId=2
+2026-01-26 12:24:08.452 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Generating access token
+2026-01-26 12:24:08.453 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Generated token UUID: 3b2ad4f1-eac4-4663-a3a5-413dcf6d9201 for user: 2
+2026-01-26 12:24:08.541 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Generated token for user: 2 with UUID: 3b2ad4f1-eac4-4663-a3a5-413dcf6d9201 and role: Admin
+2026-01-26 12:24:08.542 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Access token generated for userId=2 with role=Admin
+2026-01-26 12:24:08.542 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Generating refresh token
+2026-01-26 12:24:08.543 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Generated token UUID: 425b113f-c46c-44b2-af35-bee442a70868 for user: 2
+2026-01-26 12:24:08.544 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Generated token for user: 2 with UUID: 425b113f-c46c-44b2-af35-bee442a70868 and role: null
+2026-01-26 12:24:08.545 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Refresh token generated for userId=2
+2026-01-26 12:24:08.578 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Token UUIDs extracted - Access UUID=3b2ad4f1-eac4-4663-a3a5-413dcf6d9201, Refresh UUID=425b113f-c46c-44b2-af35-bee442a70868
+2026-01-26 12:24:08.579 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Cached access token UUID: 3b2ad4f1-eac4-4663-a3a5-413dcf6d9201 for user: 2 (expires in 2700000ms)
+2026-01-26 12:24:08.579 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Cached refresh token UUID: 425b113f-c46c-44b2-af35-bee442a70868 for user: 2 (expires in 604800000ms)
+2026-01-26 12:24:08.580 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - [AuthService] INFO - Tokens cached successfully for userId=2
+2026-01-26 12:24:08.581 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Recording login history for userId=2
+2026-01-26 12:24:08.631 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Login history recorded for userId=2
+2026-01-26 12:24:08.636 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - [AuthService] INFO - Authentication successful for userId=2, email=shakib@yopmail.com
+2026-01-26 12:24:08.636 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - [AuthController] INFO - login() - Login successful: userId=2, email=shakib@yopmail.com
+2026-01-26 12:24:08.692 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:08.692 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:08.694 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 3b2ad4f1-eac4-4663-a3a5-413dcf6d9201 with user ID: 2
+2026-01-26 12:24:08.694 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 3b2ad4f1-eac4-4663-a3a5-413dcf6d9201 with user ID: 2
+2026-01-26 12:24:08.695 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 2
+2026-01-26 12:24:08.695 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 2
+2026-01-26 12:24:08.719 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User found: shakib@yopmail.com
+2026-01-26 12:24:08.720 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ADMIN
+2026-01-26 12:24:08.720 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User found: shakib@yopmail.com
+2026-01-26 12:24:08.720 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ADMIN
+2026-01-26 12:24:08.720 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.VIEW.ALL
+2026-01-26 12:24:08.721 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.VIEW.ALL
+2026-01-26 12:24:08.721 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:08.721 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:08.722 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.MANAGE.OWN
+2026-01-26 12:24:08.722 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.MANAGE.OWN
+2026-01-26 12:24:08.722 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.MANAGE.OWN
+2026-01-26 12:24:08.723 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.ALL
+2026-01-26 12:24:08.723 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.MANAGE.OWN
+2026-01-26 12:24:08.723 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.INVITE
+2026-01-26 12:24:08.723 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.ALL
+2026-01-26 12:24:08.724 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:08.724 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.INVITE
+2026-01-26 12:24:08.724 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 2
+2026-01-26 12:24:08.724 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:08.725 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 2
+2026-01-26 12:24:08.735 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - GET /api/events - Fetching events: page=0, size=100
+2026-01-26 12:24:08.735 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - GET /api/events - Fetching events: page=0, size=3
+2026-01-26 12:24:08.742 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - User authenticated: userId=2, email=shakib@yopmail.com
+2026-01-26 12:24:08.742 [http-nio-8083-exec-7] DEBUG c.e.service.ApplicationLoggerService - User authenticated: userId=2, email=shakib@yopmail.com
+2026-01-26 12:24:08.778 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.778 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.778 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.779 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.780 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.780 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.781 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.781 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.782 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.782 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.783 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.783 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.784 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.784 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.784 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.784 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.800 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.800 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.801 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.801 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.801 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.801 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.802 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.802 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.802 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.803 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.803 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.803 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.803 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.804 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.804 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.804 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.807 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.807 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.808 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.808 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.808 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.809 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.809 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.809 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.810 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.810 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.810 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.810 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.811 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.811 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.812 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.812 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.817 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.817 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.818 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.818 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.819 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.819 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.819 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.819 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.820 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.820 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.820 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.820 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.821 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.821 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.821 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.821 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.825 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.825 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.825 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.825 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.826 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.826 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.827 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.827 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.827 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.827 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.828 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.828 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.829 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.829 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.829 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.829 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.833 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.833 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.834 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.834 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.835 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.835 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.835 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.835 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.836 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.836 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.837 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.837 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.837 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.837 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.838 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.838 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.842 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.842 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.843 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.843 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.844 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.844 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.844 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.844 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.845 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.845 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.845 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.845 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.846 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.846 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.846 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.847 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.851 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.851 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.852 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.852 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.852 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.853 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.853 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.853 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.854 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.854 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.854 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.854 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.855 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.855 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.855 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.855 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.859 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.859 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.859 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.859 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.860 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.860 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.860 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.860 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.861 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.861 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.861 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.861 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.862 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.862 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.863 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.863 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.867 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.867 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 2
+2026-01-26 12:24:08.867 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.868 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.868 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.868 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.869 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.869 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:08.869 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.869 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 2
+2026-01-26 12:24:08.870 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.870 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User role: Admin
+2026-01-26 12:24:08.871 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.871 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: event.view.all, history.view.own, event.manage.own, event.approve, user.manage.own, user.view.all, event.invite
+2026-01-26 12:24:08.871 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.871 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': true
+2026-01-26 12:24:08.877 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - Events retrieved successfully: totalEvents=10, page=0, size=100, userId=2
+2026-01-26 12:24:08.877 [http-nio-8083-exec-7] INFO  c.e.service.ApplicationLoggerService - Events retrieved successfully: totalEvents=10, page=0, size=3, userId=2
+2026-01-26 12:24:08.919 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:08.921 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 3b2ad4f1-eac4-4663-a3a5-413dcf6d9201 with user ID: 2
+2026-01-26 12:24:08.921 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 2
+2026-01-26 12:24:08.931 [http-nio-8083-exec-8] INFO  c.e.service.ApplicationLoggerService - User found: shakib@yopmail.com
+2026-01-26 12:24:08.932 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ADMIN
+2026-01-26 12:24:08.932 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.VIEW.ALL
+2026-01-26 12:24:08.933 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:08.933 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.MANAGE.OWN
+2026-01-26 12:24:08.933 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.MANAGE.OWN
+2026-01-26 12:24:08.933 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.ALL
+2026-01-26 12:24:08.934 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.INVITE
+2026-01-26 12:24:08.934 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:08.934 [http-nio-8083-exec-8] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 2
+2026-01-26 12:24:10.441 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - sendEventReminders() - Scheduler job started
+2026-01-26 12:24:10.441 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - send24HourReminders() - Checking for events starting in 24 hours
+2026-01-26 12:24:10.530 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - send24HourReminders() - Found 0 attendees needing 24-hour reminder
+2026-01-26 12:24:10.530 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - send24HourReminders() - Sent: 0, Failed: 0
+2026-01-26 12:24:10.530 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - send2HourReminders() - Checking for events starting in 2 hours
+2026-01-26 12:24:10.547 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - send2HourReminders() - Found 0 attendees needing 2-hour reminder
+2026-01-26 12:24:10.547 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - send2HourReminders() - Sent: 0, Failed: 0
+2026-01-26 12:24:10.547 [scheduler-1] INFO  c.e.service.ApplicationLoggerService - [EventReminderScheduler] INFO - sendEventReminders() - Job completed
+2026-01-26 12:24:12.637 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:12.639 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 3b2ad4f1-eac4-4663-a3a5-413dcf6d9201 with user ID: 2
+2026-01-26 12:24:12.640 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 2
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] INFO  c.e.service.ApplicationLoggerService - User found: shakib@yopmail.com
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ADMIN
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.VIEW.ALL
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_USER.MANAGE.OWN
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.MANAGE.OWN
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.ALL
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.INVITE
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:12.652 [http-nio-8083-exec-10] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 2
+2026-01-26 12:24:28.296 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthController] DEBUG - login() - POST /api/auth/login - Login attempt: email=kamal03@yopmail.com
+2026-01-26 12:24:28.296 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Validating input parameters
+2026-01-26 12:24:28.296 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Searching for user with email: kamal03@yopmail.com
+2026-01-26 12:24:28.301 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - User found: userId=26
+2026-01-26 12:24:28.301 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Validating password for userId=26
+2026-01-26 12:24:28.566 [http-nio-8083-exec-1] INFO  c.e.service.ApplicationLoggerService - [AuthService] INFO - Password validated successfully for userId=26
+2026-01-26 12:24:28.566 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Generating access token
+2026-01-26 12:24:28.567 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - Generated token UUID: 36875bea-5ad6-444b-a94e-87b09a95c2a9 for user: 26
+2026-01-26 12:24:28.569 [http-nio-8083-exec-1] INFO  c.e.service.ApplicationLoggerService - Generated token for user: 26 with UUID: 36875bea-5ad6-444b-a94e-87b09a95c2a9 and role: Attendee
+2026-01-26 12:24:28.569 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Access token generated for userId=26 with role=Attendee
+2026-01-26 12:24:28.569 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Generating refresh token
+2026-01-26 12:24:28.570 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - Generated token UUID: 97d626a8-2f39-4e95-a272-1752836143c4 for user: 26
+2026-01-26 12:24:28.570 [http-nio-8083-exec-1] INFO  c.e.service.ApplicationLoggerService - Generated token for user: 26 with UUID: 97d626a8-2f39-4e95-a272-1752836143c4 and role: null
+2026-01-26 12:24:28.571 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Refresh token generated for userId=26
+2026-01-26 12:24:28.572 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Token UUIDs extracted - Access UUID=36875bea-5ad6-444b-a94e-87b09a95c2a9, Refresh UUID=97d626a8-2f39-4e95-a272-1752836143c4
+2026-01-26 12:24:28.573 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - Cached access token UUID: 36875bea-5ad6-444b-a94e-87b09a95c2a9 for user: 26 (expires in 2700000ms)
+2026-01-26 12:24:28.573 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - Cached refresh token UUID: 97d626a8-2f39-4e95-a272-1752836143c4 for user: 26 (expires in 604800000ms)
+2026-01-26 12:24:28.573 [http-nio-8083-exec-1] INFO  c.e.service.ApplicationLoggerService - [AuthService] INFO - Tokens cached successfully for userId=26
+2026-01-26 12:24:28.574 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Recording login history for userId=26
+2026-01-26 12:24:28.584 [http-nio-8083-exec-1] DEBUG c.e.service.ApplicationLoggerService - [AuthService] DEBUG - authenticate() - Login history recorded for userId=26
+2026-01-26 12:24:28.584 [http-nio-8083-exec-1] INFO  c.e.service.ApplicationLoggerService - [AuthService] INFO - Authentication successful for userId=26, email=kamal03@yopmail.com
+2026-01-26 12:24:28.585 [http-nio-8083-exec-1] INFO  c.e.service.ApplicationLoggerService - [AuthController] INFO - login() - Login successful: userId=26, email=kamal03@yopmail.com
+2026-01-26 12:24:28.602 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:28.604 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:28.604 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 36875bea-5ad6-444b-a94e-87b09a95c2a9 with user ID: 26
+2026-01-26 12:24:28.605 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 26
+2026-01-26 12:24:28.605 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 36875bea-5ad6-444b-a94e-87b09a95c2a9 with user ID: 26
+2026-01-26 12:24:28.606 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 26
+2026-01-26 12:24:28.610 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:28.613 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 36875bea-5ad6-444b-a94e-87b09a95c2a9 with user ID: 26
+2026-01-26 12:24:28.614 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 26
+2026-01-26 12:24:28.619 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User found: kamal03@yopmail.com
+2026-01-26 12:24:28.619 [http-nio-8083-exec-4] INFO  c.e.service.ApplicationLoggerService - User found: kamal03@yopmail.com
+2026-01-26 12:24:28.620 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ATTENDEE
+2026-01-26 12:24:28.620 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ATTENDEE
+2026-01-26 12:24:28.620 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.PUBLIC
+2026-01-26 12:24:28.620 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.PUBLIC
+2026-01-26 12:24:28.621 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.INVITED
+2026-01-26 12:24:28.621 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.INVITED
+2026-01-26 12:24:28.621 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.ATTEND
+2026-01-26 12:24:28.621 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.ATTEND
+2026-01-26 12:24:28.622 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:28.622 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:28.622 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:28.623 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:28.623 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.HOLD
+2026-01-26 12:24:28.623 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.HOLD
+2026-01-26 12:24:28.624 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.REACTIVATE
+2026-01-26 12:24:28.624 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.REACTIVATE
+2026-01-26 12:24:28.624 [http-nio-8083-exec-4] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 26
+2026-01-26 12:24:28.624 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 26
+2026-01-26 12:24:28.628 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - GET /api/events - Fetching events: page=0, size=3
+2026-01-26 12:24:28.633 [http-nio-8083-exec-3] DEBUG c.e.service.ApplicationLoggerService - User authenticated: userId=26, email=kamal03@yopmail.com
+2026-01-26 12:24:28.634 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User found: kamal03@yopmail.com
+2026-01-26 12:24:28.635 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ATTENDEE
+2026-01-26 12:24:28.635 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.PUBLIC
+2026-01-26 12:24:28.635 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.INVITED
+2026-01-26 12:24:28.636 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.ATTEND
+2026-01-26 12:24:28.636 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:28.636 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:28.637 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.HOLD
+2026-01-26 12:24:28.637 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.REACTIVATE
+2026-01-26 12:24:28.638 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 26
+2026-01-26 12:24:28.642 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - GET /api/events - Fetching events: page=0, size=100
+2026-01-26 12:24:28.648 [http-nio-8083-exec-6] DEBUG c.e.service.ApplicationLoggerService - User authenticated: userId=26, email=kamal03@yopmail.com
+2026-01-26 12:24:28.664 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.664 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.665 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.665 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.666 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.666 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.667 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.667 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.668 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.668 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.668 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.669 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.674 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.674 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.674 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.675 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.675 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.675 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.676 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.676 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.676 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.677 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.677 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.677 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.677 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.678 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.678 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.678 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.678 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.679 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.679 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.679 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.679 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.680 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.680 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.680 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.683 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.684 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.684 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.684 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.685 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.685 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.685 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.685 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.686 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.686 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.686 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.686 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.686 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.687 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.687 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.687 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.687 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.688 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.688 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.688 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.688 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.689 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.690 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.690 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.693 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.693 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.694 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.694 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.694 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.694 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.695 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.695 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.695 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.696 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.696 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.696 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.697 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.697 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.697 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.698 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.698 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.698 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.698 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.699 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.699 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.699 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.699 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.700 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.702 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.702 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.702 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.703 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.703 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.703 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.703 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.704 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.704 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.704 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.704 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.704 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.705 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.705 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.705 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.705 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.706 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.706 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.706 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.706 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.707 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.707 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.707 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.708 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.711 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.711 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.711 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.712 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.712 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.712 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.713 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.713 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.713 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.713 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.714 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.714 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.714 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.714 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.715 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.715 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.715 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.715 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.715 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.716 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.716 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.716 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.716 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.717 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.719 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.719 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.720 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.720 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.720 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.720 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.721 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.721 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.721 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.722 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.722 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.722 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.722 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.722 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.723 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.723 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.723 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.724 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.724 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.724 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.725 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.725 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.725 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.726 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.729 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.729 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.729 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.729 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.730 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.730 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.730 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.730 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.730 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.731 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.731 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.731 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.732 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.732 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.732 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.732 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.733 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.733 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.733 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.733 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.733 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.734 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.734 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.734 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.737 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.737 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.737 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.737 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.738 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.738 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.738 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.738 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.739 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.739 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.740 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.740 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.740 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.740 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.741 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.741 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.742 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.invited' for user 26
+2026-01-26 12:24:28.742 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.742 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.743 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.743 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.743 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.744 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.744 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.invited': true
+2026-01-26 12:24:28.747 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.747 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.748 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.748 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.749 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.749 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.749 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.749 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.750 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.750 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.750 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.750 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.751 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.751 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.751 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.752 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.752 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.752 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.752 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.753 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.753 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.753 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.753 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.754 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.757 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.manage.all' for user 26
+2026-01-26 12:24:28.758 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.758 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.759 [http-nio-8083-exec-3] INFO  c.e.service.ApplicationLoggerService - Events retrieved successfully: totalEvents=5, page=0, size=3, userId=26
+2026-01-26 12:24:28.759 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.manage.all': false
+2026-01-26 12:24:28.760 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.all' for user 26
+2026-01-26 12:24:28.760 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.761 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.761 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.all': false
+2026-01-26 12:24:28.762 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Checking permission 'event.view.public' for user 26
+2026-01-26 12:24:28.762 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User role: Attendee
+2026-01-26 12:24:28.762 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - User has 7 permissions: history.view.own, event.hold, event.attend, event.approve, event.reactivate, event.view.public, event.view.invited
+2026-01-26 12:24:28.763 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Has permission 'event.view.public': true
+2026-01-26 12:24:28.767 [http-nio-8083-exec-6] INFO  c.e.service.ApplicationLoggerService - Events retrieved successfully: totalEvents=5, page=0, size=100, userId=26
+2026-01-26 12:24:28.774 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Token validated successfully
+2026-01-26 12:24:28.776 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Token UUID validated from cache: 36875bea-5ad6-444b-a94e-87b09a95c2a9 with user ID: 26
+2026-01-26 12:24:28.777 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Loading user details for user ID: 26
+2026-01-26 12:24:28.786 [http-nio-8083-exec-2] INFO  c.e.service.ApplicationLoggerService - User found: kamal03@yopmail.com
+2026-01-26 12:24:28.787 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: ROLE_ATTENDEE
+2026-01-26 12:24:28.787 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.PUBLIC
+2026-01-26 12:24:28.787 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.VIEW.INVITED
+2026-01-26 12:24:28.788 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.ATTEND
+2026-01-26 12:24:28.788 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_HISTORY.VIEW.OWN
+2026-01-26 12:24:28.788 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.APPROVE
+2026-01-26 12:24:28.788 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.HOLD
+2026-01-26 12:24:28.789 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Added authority: PERMISSION_EVENT.REACTIVATE
+2026-01-26 12:24:28.789 [http-nio-8083-exec-2] DEBUG c.e.service.ApplicationLoggerService - Built 8 authorities for user 26
+2026-01-26 12:25:00.432 [scheduler-2] INFO  c.e.service.ApplicationLoggerService - [AuditLogArchivalJob] INFO - archiveOldLogs() - Scheduler job started - Archiving old audit logs
+2026-01-26 12:25:00.432 [scheduler-2] DEBUG c.e.service.ApplicationLoggerService - [AuditLogArchivalJob] DEBUG - archiveOldLogs() - Deleting logs older than: 2025-10-28T12:25:00.432859800
+2026-01-26 12:25:00.434 [scheduler-2] INFO  c.e.service.ApplicationLoggerService - [AuditLogArchivalJob] INFO - archiveOldLogs() - Log archival completed. Deleted activity records: 0, Login records: 0, Password records: 0
+2026-01-26 12:25:00.434 [scheduler-2] INFO  c.e.service.ApplicationLoggerService - [AuditLogArchivalJob] INFO - archiveOldLogs() - Total audit logs archived: 0

@@ -1,0 +1,2 @@
+# Ignore frontend_event folder for backend-only repo
+frontend_event/

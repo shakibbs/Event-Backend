@@ -1,13 +1,26 @@
 #!/bin/bash
+set -e
 
 # Debug: Print environment variables to verify they're being passed
-echo "=== Environment Variables ==="
-echo "PORT: $PORT"
-echo "DATABASE_URL: $DATABASE_URL"
-echo "DATABASE_USERNAME: $DATABASE_USERNAME"
-echo "DATABASE_PASSWORD: $DATABASE_PASSWORD"
-echo "JWT_SECRET: $JWT_SECRET"
-echo "=== End Environment Variables ==="
+echo ""
+echo "========================================="
+echo "=== Environment Variables Debug ==="
+echo "========================================="
+echo "PORT: ${PORT:-NOT_SET}"
+echo "DATABASE_URL: ${DATABASE_URL:-NOT_SET}"
+echo "DATABASE_USERNAME: ${DATABASE_USERNAME:-NOT_SET}"
+if [ -n "$DATABASE_PASSWORD" ]; then
+  echo "DATABASE_PASSWORD: [SET - ${#DATABASE_PASSWORD} chars]"
+else
+  echo "DATABASE_PASSWORD: NOT_SET"
+fi
+if [ -n "$JWT_SECRET" ]; then
+  echo "JWT_SECRET: [SET - ${#JWT_SECRET} chars]"
+else
+  echo "JWT_SECRET: NOT_SET"
+fi
+echo "========================================="
+echo ""
 
 # Run Java with environment variables
 exec java \

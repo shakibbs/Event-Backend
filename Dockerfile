@@ -12,15 +12,25 @@ COPY pom.xml .
 COPY src ./src
 
 # List contents to verify copy worked
-RUN echo "=== Listing current directory ===" && ls -la && echo "=== Listing src directory ===" && find src -type f | head -20
-
-# Build the application with verbose output
-RUN echo "=== Starting Maven build ===" && \
-    mvn clean package -DskipTests -e 2>&1 | tail -150 && \
-    echo "=== Build completed, checking for JAR ===" && \
-    ls -lh target/*.jar || echo "ERROR: No JAR file created!" && \
-    echo "=== Checking JAR contents ===" && \
-    jar tf target/*.jar | grep -c "\.class$" || echo "ERROR: No classes found in JAR!"
+RUN echo "=== DIAGNOSTIC: Current directory ===" && \
+    ls -la && \
+    echo "=== DIAGNOSTIC: Source files present ===" && \
+    find src -name "*.java" | wc -l && \
+    echo "=== DIAGNOSTIC: Application class location ===" && \
+    find src -name "EventManagementSystemApplication.java" && \
+    echo "=== DIAGNOSTIC: Starting Maven build ===" && \
+    mvn -v && \
+    echo "=== DIAGNOSTIC: Running mvn clean package ===" && \
+    mvn clean package -DskipTests 2>&1 | grep -E "(BUILD|ERROR|compiled|Downloading|Downloaded)" && \
+    echo "=== DIAGNOSTIC: Maven build exit code: $? ===" && \
+    echo "=== DIAGNOSTIC: Checking target directory ===" && \
+    ls -lh target/ | grep -E "^-|^d" && \
+    echo "=== DIAGNOSTIC: JAR file details ===" && \
+    ls -lh target/*.jar && \
+    echo "=== DIAGNOSTIC: Total classes in JAR ===" && \
+    jar tf target/*.jar | grep "\.class$" | wc -l && \
+    echo "=== DIAGNOSTIC: Looking for EventManagementSystemApplication ===" && \
+    jar tf target/*.jar | grep "EventManagementSystemApplication"
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

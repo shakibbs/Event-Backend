@@ -10,8 +10,8 @@ WORKDIR /app
 # Copy entire source first
 COPY . .
 
-# Build the application
-RUN mvn clean package -DskipTests
+# Build the application - explicitly set main class for Spring Boot
+RUN mvn clean package -DskipTests -Dspring-boot.repackage.main-class=com.event_management_system.EventManagementSystemApplication
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

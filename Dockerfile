@@ -24,5 +24,5 @@ COPY --from=builder /app/target/*.jar app.jar
 # Expose the port (Dynamic port from environment)
 EXPOSE ${PORT:-10000}
 
-# Run the jar file with dynamic PORT from environment
-CMD ["sh", "-c", "java -Dserver.port=${PORT:-8083} -jar app.jar"]
+# Run the jar file - extract and run the class directly if needed
+CMD ["java", "-Dserver.port=${PORT:-8083}", "-jar", "app.jar"]

@@ -8,10 +8,10 @@ WORKDIR /app
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
 
-# Make mvnw executable
+# Make mvnw script executable (CRITICAL: fixes permission denied error in Docker)
 RUN chmod +x ./mvnw
 
-# Download dependencies (will be cached if pom.xml and .mvn haven't changed)
+# Download dependencies (will be cached if pom.xml and .mvn haven't changed)  
 RUN ./mvnw dependency:go-offline
 
 # Copy the rest of the source code

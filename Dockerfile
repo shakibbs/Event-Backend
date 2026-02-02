@@ -7,29 +7,14 @@ RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 # Set the working directory
 WORKDIR /app
 
-FROM eclipse-temurin:17-jdk-jammy as builder
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-
+# Copy pom.xml and source code
 COPY pom.xml .
 COPY src ./src
 
-FROM eclipse-temurin:17-jdk-jammy as builder
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-
-COPY pom.xml .
-COPY src ./src
-
+# Build the application
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-jammy
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
-EXPOSE ${PORT:-10000}
-CMD ["java", "-Dserver.port=${PORT:-8083}", "-jar", "app.jar"]
-
-# Runtime stage - use smaller JRE image
+# Runtime stage - Use Eclipse Temurin JRE 17 (smaller image)
 FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
@@ -37,8 +22,15 @@ WORKDIR /app
 # Copy the built jar from builder stage
 COPY --from=builder /app/target/*.jar app.jar
 
-# Expose the port (Dynamic port from environment)
-EXPOSE ${PORT:-10000}
+# Expose the port (Render will set PORT environment variable)
+EXPOSE 8080
 
-# Run the jar file - extract and run the class directly if needed
-CMD ["java", "-Dserver.port=${PORT:-8083}", "-jar", "app.jar"]
+# Run the application with proper environment variable handling
+# All environment variables from Render will be available to the Java process
+CMD ["java", \
+     "-Dserver.port=${PORT:-8080}", \
+     "-Dspring.datasource.url=${DATABASE_URL}", \
+     "-Dspring.datasource.username=${DATABASE_USERNAME}", \
+     "-Dspring.datasource.password=${DATABASE_PASSWORD}", \
+     "-Dapp.jwt.secret=${JWT_SECRET}", \
+     "-jar", "app.jar"]

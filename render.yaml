@@ -8,11 +8,18 @@ services:
     buildCommand: mvn clean package -DskipTests
     startCommand: java -Dserver.port=$PORT -jar target/event_management_system-0.0.1-SNAPSHOT.jar
     
+    # Environment variables
+    envVars:
+      - key: DATABASE_URL
+        value: jdbc:mysql://shinkansen.proxy.rlwy.net:42753/railway?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - key: DATABASE_USERNAME
+        value: root
+      - key: DATABASE_PASSWORD
+        value: MiKlXfkqoCVdHaJojqVkcFugowMmJwk6
+      - key: JWT_SECRET
+        value: your-super-secret-key-minimum-32-characters-change-in-production-12345
+    
     # Health check
     healthCheckPath: /swagger-ui.html
     healthCheckInterval: 10
 
-# Environment variables - SET THESE IN RENDER DASHBOARD (not here)
-# PORT, DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD, APP_BASE_URL,
-# JWT_SECRET, JWT_ACCESS_TOKEN_EXPIRATION, JWT_REFRESH_TOKEN_EXPIRATION,
-# MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, ENVIRONMENT, SPRING_JPA_HIBERNATE_DDL_AUTO

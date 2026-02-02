@@ -1,5 +1,5 @@
 # Use Maven image with Java 17
-FROM maven:3.9-eclipse-temurin-17-jammy as builder
+FROM maven:3.9.2-eclipse-temurin-17-jammy as builder
 
 # Set the working directory
 WORKDIR /app

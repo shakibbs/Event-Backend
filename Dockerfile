@@ -23,11 +23,16 @@ RUN echo "=== Source structure ===" && \
 RUN mvn clean package -DskipTests || exit 1
 
 # Show results
-RUN echo "=== JAR Contents ===" && \
-    jar tf target/*.jar | grep "EventManagementSystemApplication" || \
-    (echo "ERROR: Main class NOT found in JAR!" && \
-     echo "Listing first 20 application classes:" && \
-     jar tf target/*.jar | grep "\.class$" | head -20 && exit 1)
+RUN echo "=== JAR Analysis ===" && \
+    echo "Total .class files in JAR: $(jar tf target/*.jar | grep "\.class$" | wc -l)" && \
+    echo "" && \
+    echo "Classes in BOOT-INF/classes/: $(jar tf target/*.jar | grep "^BOOT-INF/classes/.*\.class$" | wc -l)" && \
+    echo "" && \
+    echo "Application classes (com.event_management): $(jar tf target/*.jar | grep "BOOT-INF/classes/com/event_management" | wc -l)" && \
+    echo "" && \
+    echo "First 10 application classes:" && \
+    jar tf target/*.jar | grep "BOOT-INF/classes/com/event_management" | head -10 || \
+    (echo "ERROR: No application classes found!" && exit 1)
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

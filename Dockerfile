@@ -7,17 +7,11 @@ RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 # Set the working directory
 WORKDIR /app
 
-# Copy pom.xml first (for dependency caching)
-COPY pom.xml .
-
-# Download dependencies (will be cached if pom.xml hasn't changed)
-RUN mvn dependency:go-offline -q
-
-# Copy all source code
-COPY src/ src/
+# Copy entire source first
+COPY . .
 
 # Build the application
-RUN mvn clean package -DskipTests -q
+RUN mvn clean package -DskipTests
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

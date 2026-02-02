@@ -1,5 +1,8 @@
-# Use Maven image with Java 17
-FROM maven:3.9.2-eclipse-temurin-17-jammy as builder
+# Build stage - Use Eclipse Temurin JDK 17 and install Maven
+FROM eclipse-temurin:17-jdk-jammy as builder
+
+# Install Maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app

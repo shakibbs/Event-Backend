@@ -11,12 +11,16 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-# Build the application
-RUN mvn clean package -DskipTests && \
-    echo "JAR created at:" && \
-    ls -lh target/*.jar && \
-    echo "Checking main class in JAR:" && \
-    jar tf target/*.jar | grep EventManagementSystemApplication.class
+# List contents to verify copy worked
+RUN echo "=== Listing current directory ===" && ls -la && echo "=== Listing src directory ===" && find src -type f | head -20
+
+# Build the application with verbose output
+RUN echo "=== Starting Maven build ===" && \
+    mvn clean package -DskipTests -e 2>&1 | tail -150 && \
+    echo "=== Build completed, checking for JAR ===" && \
+    ls -lh target/*.jar || echo "ERROR: No JAR file created!" && \
+    echo "=== Checking JAR contents ===" && \
+    jar tf target/*.jar | grep -c "\.class$" || echo "ERROR: No classes found in JAR!"
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

@@ -26,11 +26,11 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Run the application with proper environment variable handling
-# All environment variables from Render will be available to the Java process
-CMD ["java", \
-     "-Dserver.port=${PORT:-8080}", \
-     "-Dspring.datasource.url=${DATABASE_URL}", \
-     "-Dspring.datasource.username=${DATABASE_USERNAME}", \
-     "-Dspring.datasource.password=${DATABASE_PASSWORD}", \
-     "-Dapp.jwt.secret=${JWT_SECRET}", \
-     "-jar", "app.jar"]
+# Use shell form to support environment variable expansion
+CMD java \
+    -Dserver.port=${PORT:-8080} \
+    -Dspring.datasource.url=${DATABASE_URL} \
+    -Dspring.datasource.username=${DATABASE_USERNAME} \
+    -Dspring.datasource.password=${DATABASE_PASSWORD} \
+    -Dapp.jwt.secret=${JWT_SECRET} \
+    -jar app.jar

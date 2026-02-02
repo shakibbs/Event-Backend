@@ -21,16 +21,17 @@ RUN echo "=== DIAGNOSTIC: Current directory ===" && \
     echo "=== DIAGNOSTIC: Starting Maven build ===" && \
     mvn -v && \
     echo "=== DIAGNOSTIC: Running mvn clean package ===" && \
-    mvn clean package -DskipTests 2>&1 | grep -E "(BUILD|ERROR|compiled|Downloading|Downloaded)" && \
-    echo "=== DIAGNOSTIC: Maven build exit code: $? ===" && \
+    mvn clean package -DskipTests 2>&1 | tail -50 && \
     echo "=== DIAGNOSTIC: Checking target directory ===" && \
     ls -lh target/ | grep -E "^-|^d" && \
     echo "=== DIAGNOSTIC: JAR file details ===" && \
     ls -lh target/*.jar && \
     echo "=== DIAGNOSTIC: Total classes in JAR ===" && \
     jar tf target/*.jar | grep "\.class$" | wc -l && \
-    echo "=== DIAGNOSTIC: Looking for EventManagementSystemApplication ===" && \
-    jar tf target/*.jar | grep "EventManagementSystemApplication"
+    echo "=== DIAGNOSTIC: ALL classes in JAR ===" && \
+    jar tf target/*.jar | grep "\.class$" && \
+    echo "=== DIAGNOSTIC: Checking BOOT-INF structure ===" && \
+    jar tf target/*.jar | grep -E "^BOOT-INF" | head -20
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

@@ -1,27 +1,28 @@
-# Use a supported OpenJDK runtime as a parent image
-FROM eclipse-temurin:17-jdk-jammy
+# Use Maven image with Java 17
+FROM maven:3.9-eclipse-temurin-17-jammy as builder
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the Maven wrapper and pom.xml
-COPY .mvn .mvn
-COPY mvnw pom.xml ./
+# Copy pom.xml
+COPY pom.xml .
 
-# Make mvnw script executable (CRITICAL: fixes permission denied error in Docker)
-RUN chmod +x ./mvnw
-
-# Download dependencies (will be cached if pom.xml and .mvn haven't changed)  
-RUN ./mvnw dependency:go-offline
+# Download dependencies (will be cached if pom.xml hasn't changed)
+RUN mvn dependency:go-offline
 
 # Copy the rest of the source code
 COPY . .
 
 # Build the application
-RUN ./mvnw clean package -DskipTests
+RUN mvn clean package -DskipTests
 
-# Copy the built jar to the working directory (adjust the jar name if needed)
-RUN cp target/*.jar app.jar
+# Runtime stage - use smaller JRE image
+FROM eclipse-temurin:17-jre-jammy
+
+WORKDIR /app
+
+# Copy the built jar from builder stage
+COPY --from=builder /app/target/*.jar app.jar
 
 # Expose the port (Dynamic port from environment)
 EXPOSE ${PORT:-10000}

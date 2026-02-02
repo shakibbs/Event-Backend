@@ -10,9 +10,6 @@ WORKDIR /app
 # Copy pom.xml first (for dependency caching)
 COPY pom.xml .
 
-# Copy the .mvn directory if it exists (for Maven wrapper settings)
-COPY .mvn/ .mvn/ 2>/dev/null || true
-
 # Download dependencies (will be cached if pom.xml hasn't changed)
 RUN mvn dependency:go-offline -q
 

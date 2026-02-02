@@ -7,11 +7,14 @@ RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 # Set the working directory
 WORKDIR /app
 
-# Copy entire source first
-COPY . .
+# Copy pom.xml first for dependency caching
+COPY pom.xml .
 
-# Build the application - explicitly set main class for Spring Boot
-RUN mvn clean package -DskipTests -Dspring-boot.repackage.main-class=com.event_management_system.EventManagementSystemApplication
+# Copy source code
+COPY src ./src
+
+# Build the application - Spring Boot will handle main class configuration from pom.xml
+RUN mvn clean package -DskipTests
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

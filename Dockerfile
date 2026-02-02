@@ -15,24 +15,28 @@ COPY pom.xml .
 COPY src ./src
 
 # Show what we have
-RUN echo "=== Source structure ===" && \
-    find src -type f -name "*.java" | head -5 && \
+RUN echo "=== Checking src structure ===" && \
+    ls -la src/ && \
+    echo "" && \
+    echo "=== Checking src/main structure ===" && \
+    ls -la src/main/ && \
+    echo "" && \
+    echo "=== Checking src/main/java structure ===" && \
+    ls -la src/main/java/ && \
+    echo "" && \
+    echo "=== Checking for EventManagementSystemApplication.java ===" && \
+    find src -name "EventManagementSystemApplication.java" && \
     echo "Total Java files: $(find src -type f -name "*.java" | wc -l)"
 
 # Build
-RUN mvn clean package -DskipTests || exit 1
+RUN echo "=== Running Maven build ===" && \
+    mvn clean package -DskipTests || (echo "Maven build failed!"; exit 1)
 
 # Show results
 RUN echo "=== JAR Analysis ===" && \
     echo "Total .class files in JAR: $(jar tf target/*.jar | grep "\.class$" | wc -l)" && \
-    echo "" && \
     echo "Classes in BOOT-INF/classes/: $(jar tf target/*.jar | grep "^BOOT-INF/classes/.*\.class$" | wc -l)" && \
-    echo "" && \
-    echo "Application classes (com.event_management): $(jar tf target/*.jar | grep "BOOT-INF/classes/com/event_management" | wc -l)" && \
-    echo "" && \
-    echo "First 10 application classes:" && \
-    jar tf target/*.jar | grep "BOOT-INF/classes/com/event_management" | head -10 || \
-    (echo "ERROR: No application classes found!" && exit 1)
+    echo "Application classes (com.event_management): $(jar tf target/*.jar | grep "BOOT-INF/classes/com/event_management" | wc -l)"
 
 # Runtime stage - use smaller JRE image
 FROM eclipse-temurin:17-jre-jammy

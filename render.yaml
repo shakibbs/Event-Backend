@@ -6,7 +6,7 @@ services:
     
     # Build configuration
     buildCommand: mvn clean package -DskipTests
-    startCommand: java -Dserver.port=$PORT -jar target/event_management_system-0.0.1-SNAPSHOT.jar
+    startCommand: java -Dserver.port=$PORT -Dspring.datasource.url=$DATABASE_URL -Dspring.datasource.username=$DATABASE_USERNAME -Dspring.datasource.password=$DATABASE_PASSWORD -Dapp.jwt.secret=$JWT_SECRET -jar target/event_management_system-0.0.1-SNAPSHOT.jar
     
     # Environment variables
     envVars:

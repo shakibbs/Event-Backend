@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import com.event_management_system.repository.RoleRepository;
 import jakarta.annotation.PostConstruct;
 
 @Service
+@DependsOn("permissionService")
 public class RoleService {
 
     @Autowired

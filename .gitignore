@@ -80,3 +80,6 @@ RBAC_TEST_REPORT_FINAL.txt
 SWAGGER_TESTING_GUIDE.md
 HELP.md
 comprehensive_rbac_test_report*.txt
+
+# Frontend folder (pushed to separate repository)
+frontend_event/

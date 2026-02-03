@@ -229,18 +229,26 @@ public class RoleService {
     }
     
     private void createRoleWithPermissions(String roleName, String... permissionNames) {
-        if (!roleRepository.findByName(roleName).isPresent()) {
-            Role role = new Role();
-            role.setName(roleName);
-            role.recordCreation("system");
-            Role savedRole = roleRepository.save(role);
-            
-            for (String permissionName : permissionNames) {
-                permissionRepository.findByName(permissionName).ifPresent(permission -> {
-                    RolePermission rolePermission = new RolePermission(savedRole, permission);
+        Optional<Role> roleOpt = roleRepository.findByName(roleName);
+        final Role role;
+        
+        if (!roleOpt.isPresent()) {
+            Role newRole = new Role();
+            newRole.setName(roleName);
+            newRole.recordCreation("system");
+            role = roleRepository.save(newRole);
+        } else {
+            role = roleOpt.get();
+        }
+        
+        for (String permissionName : permissionNames) {
+            permissionRepository.findByName(permissionName).ifPresent(permission -> {
+                boolean exists = rolePermissionRepository.findByRoleIdAndPermissionId(role.getId(), permission.getId()).isPresent();
+                if (!exists) {
+                    RolePermission rolePermission = new RolePermission(role, permission);
                     rolePermissionRepository.save(rolePermission);
-                });
-            }
+                }
+            });
         }
     }
 }

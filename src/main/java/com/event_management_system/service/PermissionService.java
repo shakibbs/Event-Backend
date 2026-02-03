@@ -93,9 +93,10 @@ public class PermissionService {
     @PostConstruct
     @Transactional
     public void initializeDefaultPermissions() {
-        if (permissionRepository.count() > 0) {
-            return;
-        }
+        // Temporarily force recreation - remove this check after first deployment
+        // if (permissionRepository.count() > 0) {
+        //     return;
+        // }
 
         // SuperAdmin permissions
         createPermissionIfNotExists("user.view.all", "Can view all users in the system");

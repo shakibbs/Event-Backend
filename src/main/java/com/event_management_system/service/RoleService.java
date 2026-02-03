@@ -211,9 +211,10 @@ public class RoleService {
     @PostConstruct
     @Transactional
     public void initializeDefaultRoles() {
-        if (roleRepository.count() > 0) {
-            return;
-        }
+        // Temporarily force recreation - remove this check after first deployment
+        // if (roleRepository.count() > 0) {
+        //     return;
+        // }
 
         createRoleWithPermissions("SuperAdmin", 
                 "user.manage.all", "user.view.all", "role.manage.all", "event.manage.all", "event.approve", 

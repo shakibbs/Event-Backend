@@ -218,8 +218,10 @@ public class RoleService {
         //     return;
         // }
 
+        log.info("[RoleService] INFO - Initializing default roles and permissions");
+        
         createRoleWithPermissions("SuperAdmin", 
-                "user.manage.all", "user.view.all", "role.manage.all", "event.manage.all", "event.approve", 
+                "user.manage.all", "user.view.all", "role.manage.all", "role.view.all", "event.manage.all", "event.approve", 
                 "event.hold", "event.reactivate", "system.config", "history.view.all");
 
         createRoleWithPermissions("Admin", 
@@ -228,9 +230,13 @@ public class RoleService {
 
         createRoleWithPermissions("Attendee", 
                 "event.view.public", "event.view.invited", "event.attend", "history.view.own");
+        
+        log.info("[RoleService] INFO - Default roles initialization completed");
     }
     
     private void createRoleWithPermissions(String roleName, String... permissionNames) {
+        log.debug("[RoleService] DEBUG - Creating/updating role: {}", roleName);
+        
         Optional<Role> roleOpt = roleRepository.findByName(roleName);
         final Role role;
         
@@ -239,19 +245,37 @@ public class RoleService {
             newRole.setName(roleName);
             newRole.recordCreation("system");
             role = roleRepository.save(newRole);
+            log.info("[RoleService] INFO - Created new role: {} with id={}", roleName, role.getId());
         } else {
             role = roleOpt.get();
+            log.debug("[RoleService] DEBUG - Role already exists: {} with id={}", roleName, role.getId());
         }
         
+        int assignedCount = 0;
+        int skippedCount = 0;
+        int notFoundCount = 0;
+        
         for (String permissionName : permissionNames) {
-            permissionRepository.findByName(permissionName).ifPresent(permission -> {
+            Optional<Permission> permOpt = permissionRepository.findByName(permissionName);
+            if (permOpt.isPresent()) {
+                Permission permission = permOpt.get();
                 boolean exists = rolePermissionRepository.findByRoleIdAndPermissionId(role.getId(), permission.getId()).isPresent();
                 if (!exists) {
                     RolePermission rolePermission = new RolePermission(role, permission);
                     rolePermissionRepository.save(rolePermission);
+                    assignedCount++;
+                    log.debug("[RoleService] DEBUG - Assigned permission '{}' to role '{}'", permissionName, roleName);
+                } else {
+                    skippedCount++;
                 }
-            });
+            } else {
+                notFoundCount++;
+                log.warn("[RoleService] WARN - Permission '{}' not found for role '{}'", permissionName, roleName);
+            }
         }
+        
+        log.info("[RoleService] INFO - Role '{}' permissions: {} assigned, {} skipped (already exist), {} not found", 
+                roleName, assignedCount, skippedCount, notFoundCount);
     }
 }
 
